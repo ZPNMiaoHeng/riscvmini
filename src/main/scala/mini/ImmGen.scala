@@ -28,7 +28,7 @@ class ImmGenWire(val xlen: Int) extends ImmGen {
 
   io.out := MuxLookup(
     io.sel,
-    Iimm & (-2).S,
+    Iimm & (-2).S,  // = 0xffff_fffd
     Seq(IMM_I -> Iimm, IMM_S -> Simm, IMM_B -> Bimm, IMM_U -> Uimm, IMM_J -> Jimm, IMM_Z -> Zimm)
   ).asUInt
 }

@@ -29,9 +29,9 @@ class AluIO(width: Int) extends Bundle {
   val sum = Output(UInt(width.W))
 }
 
-import mini.Alu._
+import mini.Alu._            //TODO 为何还需要导入Alu呢？
 
-trait Alu extends Module {
+trait Alu extends Module {   //TODO trait用法
   def width: Int
   val io: AluIO
 }

@@ -19,7 +19,7 @@ class DatapathIO(xlen: Int) extends Bundle {
 }
 
 class FetchExecutePipelineRegister(xlen: Int) extends Bundle {
-  val inst = chiselTypeOf(Instructions.NOP)
+  val inst = chiselTypeOf(Instructions.NOP)             // TODO:chiselTypeof
   val pc = UInt(xlen.W)
 }
 
@@ -45,7 +45,7 @@ class Datapath(val conf: CoreConfig) extends Module {
   /** *** Fetch / Execute Registers ****
     */
   val fe_reg = RegInit(
-    (new FetchExecutePipelineRegister(conf.xlen)).Lit(
+    (new FetchExecutePipelineRegister(conf.xlen)).Lit(           // TODO Lit
       _.inst -> Instructions.NOP,
       _.pc -> 0.U
     )
@@ -64,7 +64,10 @@ class Datapath(val conf: CoreConfig) extends Module {
 
   /** **** Control signals ****
     */
-  val st_type = Reg(io.ctrl.st_type.cloneType)
+  val st_type = Reg(io.ctrl.st_type.cloneType)   // TODO cloneType:用于复制一个信号的类型,复制一个输入信号的类型，
+                                                 // 从而得到一个与之完全相同但无需绑定在输入端口的信号类型。
+                                                 // 然后将这个信号类型用于定义寄存器的类型，并将其初始化。
+                                                 // 这样做的目的是避免在定义寄存器时，需要在输入端口绑定该信号。
   val ld_type = Reg(io.ctrl.ld_type.cloneType)
   val wb_sel = Reg(io.ctrl.wb_sel.cloneType)
   val wb_en = Reg(Bool())

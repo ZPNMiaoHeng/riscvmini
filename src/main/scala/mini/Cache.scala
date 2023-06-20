@@ -19,7 +19,7 @@ class CacheResp(dataWidth: Int) extends Bundle {
 
 class CacheIO(addrWidth: Int, dataWidth: Int) extends Bundle {
   val abort = Input(Bool())
-  val req = Flipped(Valid(new CacheReq(addrWidth, dataWidth)))
+  val req = Flipped(Valid(new CacheReq(addrWidth, dataWidth)))    //NOTE(MH):Valid
   val resp = Valid(new CacheResp(dataWidth))
 }
 
