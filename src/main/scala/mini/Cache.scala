@@ -40,16 +40,16 @@ object CacheState extends ChiselEnum {
 
 class Cache(val p: CacheConfig, val nasti: NastiBundleParameters, val xlen: Int) extends Module {
   // local parameters
-  val nSets = p.nSets
-  val bBytes = p.blockBytes
-  val bBits = bBytes << 3
-  val blen = log2Ceil(bBytes)
-  val slen = log2Ceil(nSets)
-  val tlen = xlen - (slen + blen)
-  val nWords = bBits / xlen
-  val wBytes = xlen / 8
-  val byteOffsetBits = log2Ceil(wBytes)
-  val dataBeats = bBits / nasti.dataBits
+  val nSets = p.nSets                        // 256
+  val bBytes = p.blockBytes                  // 16
+  val bBits = bBytes << 3                    // 128
+  val blen = log2Ceil(bBytes)                // 4
+  val slen = log2Ceil(nSets)                 // 8
+  val tlen = xlen - (slen + blen)            // 20
+  val nWords = bBits / xlen                  // 4
+  val wBytes = xlen / 8                      // 4
+  val byteOffsetBits = log2Ceil(wBytes)      // 2
+  val dataBeats = bBits / nasti.dataBits     // 128/64 = 2
 
   val io = IO(new CacheModuleIO(nasti, addrWidth = xlen, dataWidth = xlen))
 
@@ -68,8 +68,8 @@ class Cache(val p: CacheConfig, val nasti: NastiBundleParameters, val xlen: Int)
 
   // Counters
   require(dataBeats > 0)
-  val (read_count, read_wrap_out) = Counter(io.nasti.r.fire, dataBeats)
-  val (write_count, write_wrap_out) = Counter(io.nasti.w.fire, dataBeats)
+  val (read_count, read_wrap_out) = Counter(io.nasti.r.fire, dataBeats)     // NOTE
+  val (write_count, write_wrap_out) = Counter(io.nasti.w.fire, dataBeats)   // NOTE
 
   val is_idle = state === sIdle
   val is_read = state === sReadCache
@@ -83,10 +83,11 @@ class Cache(val p: CacheConfig, val nasti: NastiBundleParameters, val xlen: Int)
   val ren_reg = RegNext(ren)
 
   val addr = io.cpu.req.bits.addr
-  val idx = addr(slen + blen - 1, blen)
-  val tag_reg = addr_reg(xlen - 1, slen + blen)
-  val idx_reg = addr_reg(slen + blen - 1, blen)
-  val off_reg = addr_reg(blen - 1, byteOffsetBits)
+  val idx = addr(slen + blen - 1, blen)               // addr[11, 4]
+  // NOTE - why reg
+  val tag_reg = addr_reg(xlen - 1, slen + blen)       // [19:0] = addr [31. 12] 
+  val idx_reg = addr_reg(slen + blen - 1, blen)       // [7:0]  = addr [11, 4]
+  val off_reg = addr_reg(blen - 1, byteOffsetBits)    // [1:0]  = addr [3, 2]
 
   val rmeta = metaMem.read(idx, ren)
   val rdata = Cat((dataMem.map(_.read(idx, ren).asUInt)).reverse)

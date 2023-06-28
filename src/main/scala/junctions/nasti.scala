@@ -136,7 +136,7 @@ object NastiWriteResponseBundle {
     b
   }
 }
-
+//NOTE - how to define O/I
 class NastiBundle(params: NastiBundleParameters) extends Bundle {
   val aw = Decoupled(new NastiAddressBundle(params))
   val w = Decoupled(new NastiWriteDataBundle(params))
