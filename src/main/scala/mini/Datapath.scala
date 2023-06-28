@@ -34,7 +34,7 @@ class Datapath(val conf: CoreConfig) extends Module {
   val io = IO(new DatapathIO(conf.xlen))
   val csr = Module(new CSR(conf.xlen))
   val regFile = Module(new RegFile(conf.xlen))
-  val alu = Module(conf.makeAlu(conf.xlen))
+  val alu = Module(conf.makeAlu(conf.xlen))        //NOTE - conf.makeAlu(conf.xlen) = new AluSimple(_)
   val immGen = Module(conf.makeImmGen(conf.xlen))
   val brCond = Module(conf.makeBrCond(conf.xlen))
 

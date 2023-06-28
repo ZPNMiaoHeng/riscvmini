@@ -1,6 +1,6 @@
 [*]
 [*] GTKWave Analyzer v3.3.115 (w)1999-2023 BSI
-[*] Tue Jun 27 04:39:31 2023
+[*] Wed Jun 28 13:53:25 2023
 [*]
 [dumpfile] "/home/zpn/Documents/Pro/openCores/riscvmini/dump.fst"
 [dumpfile_mtime] "Tue Jun 20 04:23:59 2023"
@@ -8,13 +8,13 @@
 [savefile] "/home/zpn/Documents/Pro/openCores/riscvmini/1.gtkw"
 [timestart] 0
 [size] 3840 2048
-[pos] 2559 63
-*-1.274483 1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[pos] 2560 64
+*-1.326578 20 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] TOP.
 [treeopen] TOP.Tile.
 [treeopen] TOP.Tile.core.
 [treeopen] TOP.Tile.core.dpath.
-[signals_width] 625
+[signals_width] 628
 @22
 TOP.Tile.core.dpath.pc[32:0]
 TOP.Tile.core.dpath.next_pc[32:0]
@@ -76,5 +76,21 @@ TOP.Tile.icache.hit
 TOP.Tile.icache.is_dirty
 TOP.Tile.icache.read_wrap_out
 TOP.Tile.icache.read_count
+@22
+TOP.Tile.core.dpath.csr.io_evec[31:0]
+@28
+TOP.Tile.core.dpath.csr.io_expt
+TOP.Tile.core.dpath.csr.isEcall
+TOP.Tile.core.dpath.csr.isEbreak
+TOP.Tile.core.dpath.csr.wen
+TOP.Tile.core.dpath.csr.csrRO
+TOP.Tile.core.dpath.csr.privInst
+TOP.Tile.core.dpath.csr.privValid
+TOP.Tile.core.dpath.csr.io_cmd[2:0]
+TOP.Tile.core.dpath.csr.iaddrInvalid
+TOP.Tile.core.dpath.csr.laddrInvalid
+TOP.Tile.core.dpath.csr.saddrInvalid
+TOP.Tile.core.dpath.csr.io_illegal
+TOP.Tile.core.ctrl.io_illegal
 [pattern_trace] 1
 [pattern_trace] 0
