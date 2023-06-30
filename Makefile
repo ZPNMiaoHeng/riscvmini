@@ -62,7 +62,7 @@ test-quick:
 	$(SBT) $(SBT_FLAGS) testQuick
 
 clean:
-	rm -rf $(gen_dir) $(out_dir) test_run_dir
+	rm -rf $(gen_dir) $(out_dir) test_run_dir *.vcd VTile *.fst
 
 cleanall: clean
 	rm -rf target project/target

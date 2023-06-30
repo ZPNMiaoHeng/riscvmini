@@ -25,7 +25,8 @@ VerilatedVcdC* tfp;
 mm_magic_t* mem; // target memory
 
 // TODO Provide command-line options like vcd filename, timeout count, etc.
-const long timeout = 100000000L;
+const long timeout = 10000000L;
+// const long timeout = 100000000L;
 
 void tick() {
   top->clock = 1;

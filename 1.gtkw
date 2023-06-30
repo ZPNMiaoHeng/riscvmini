@@ -1,96 +1,84 @@
 [*]
 [*] GTKWave Analyzer v3.3.115 (w)1999-2023 BSI
-[*] Wed Jun 28 14:33:18 2023
+[*] Fri Jun 30 14:31:49 2023
 [*]
 [dumpfile] "/home/zpn/Documents/Pro/openCores/riscvmini/dump.fst"
-[dumpfile_mtime] "Wed Jun 28 14:32:34 2023"
-[dumpfile_size] 32878941
+[dumpfile_mtime] "Fri Jun 30 14:27:34 2023"
+[dumpfile_size] 44971504
 [savefile] "/home/zpn/Documents/Pro/openCores/riscvmini/1.gtkw"
 [timestart] 0
 [size] 3840 2048
-[pos] 2560 64
-*-1.326578 20 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[pos] -1421 -725
+*-1.629797 19 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] TOP.
 [treeopen] TOP.Tile.
 [treeopen] TOP.Tile.core.
 [treeopen] TOP.Tile.core.dpath.
-[signals_width] 628
+[signals_width] 557
 @22
-TOP.Tile.core.dpath.pc[32:0]
-TOP.Tile.core.dpath.next_pc[32:0]
+TOP.io_host_fromhost_bits[31:0]
 @28
-TOP.Tile.core.dpath.stall
-@800200
--io_cache
-@28
-[color] 2
-TOP.Tile.core.dpath.io_icache_req_valid
+TOP.io_host_fromhost_valid
 @22
-[color] 2
-TOP.Tile.core.dpath.io_icache_req_bits_addr[31:0]
+TOP.io_host_tohost[31:0]
+TOP.io_nasti_ar_bits_addr[31:0]
 @28
-[color] 2
-TOP.Tile.core.dpath.io_icache_resp_valid
+TOP.io_nasti_ar_bits_burst[1:0]
 @22
-[color] 2
-TOP.Tile.core.dpath.io_icache_resp_bits_data[31:0]
-@1000200
--io_cache
-@22
-TOP.Tile.core.dpath.fe_reg_pc[31:0]
-TOP.Tile.core.dpath.fe_reg_inst[31:0]
-@800200
--ICache
--cpu_io
+TOP.io_nasti_ar_bits_cache[3:0]
+TOP.io_nasti_ar_bits_id[3:0]
+TOP.io_nasti_ar_bits_len[7:0]
 @28
-TOP.Tile.icache.io_cpu_abort
-TOP.Tile.icache.io_cpu_req_valid
+TOP.io_nasti_ar_bits_lock
+TOP.io_nasti_ar_bits_prot[2:0]
 @22
-TOP.Tile.icache.io_cpu_req_bits_addr[31:0]
+TOP.io_nasti_ar_bits_qos[3:0]
 @28
-TOP.Tile.icache.io_cpu_resp_valid
+TOP.io_nasti_ar_bits_size[2:0]
+TOP.io_nasti_ar_ready
+[color] 1
+TOP.io_nasti_ar_valid
 @22
-TOP.Tile.icache.io_cpu_resp_bits_data[31:0]
-TOP.Tile.icache.io_cpu_req_bits_data[31:0]
-TOP.Tile.icache.io_cpu_req_bits_mask[3:0]
-@1000200
--cpu_io
-@800200
--axi
+TOP.io_nasti_r_bits_data[31:0]
+TOP.io_nasti_r_bits_id[3:0]
 @28
-TOP.Tile.icache.io_nasti_ar_valid
+TOP.io_nasti_r_bits_last
+TOP.io_nasti_r_bits_resp[1:0]
+TOP.io_nasti_r_ready
+TOP.io_nasti_r_valid
 @22
-TOP.Tile.icache.io_nasti_ar_bits_addr[31:0]
+TOP.io_nasti_aw_bits_addr[31:0]
 @28
-TOP.Tile.icache.io_nasti_ar_ready
-TOP.Tile.icache.io_nasti_r_ready
-TOP.Tile.icache.io_nasti_r_valid
+TOP.io_nasti_aw_bits_burst[1:0]
 @22
-TOP.Tile.icache.io_nasti_r_bits_data[63:0]
-@1000200
--axi
--ICache
+TOP.io_nasti_aw_bits_cache[3:0]
+TOP.io_nasti_aw_bits_id[3:0]
+TOP.io_nasti_aw_bits_len[7:0]
 @28
-TOP.Tile.icache.state[2:0]
-TOP.Tile.icache.hit
-TOP.Tile.icache.is_dirty
-TOP.Tile.icache.read_wrap_out
-TOP.Tile.icache.read_count
+TOP.io_nasti_aw_bits_lock
+TOP.io_nasti_aw_bits_prot[2:0]
 @22
-TOP.Tile.core.dpath.csr.io_evec[31:0]
+TOP.io_nasti_aw_bits_qos[3:0]
 @28
-TOP.Tile.core.dpath.csr.io_expt
-TOP.Tile.core.dpath.csr.isEcall
-TOP.Tile.core.dpath.csr.isEbreak
-TOP.Tile.core.dpath.csr.wen
-TOP.Tile.core.dpath.csr.csrRO
-TOP.Tile.core.dpath.csr.privInst
-TOP.Tile.core.dpath.csr.privValid
-TOP.Tile.core.dpath.csr.io_cmd[2:0]
-TOP.Tile.core.dpath.csr.iaddrInvalid
-TOP.Tile.core.dpath.csr.laddrInvalid
-TOP.Tile.core.dpath.csr.saddrInvalid
-TOP.Tile.core.dpath.csr.io_illegal
-TOP.Tile.core.ctrl.io_illegal
+TOP.io_nasti_aw_bits_size[2:0]
+TOP.io_nasti_aw_ready
+@29
+[color] 1
+TOP.io_nasti_aw_valid
+@22
+TOP.io_nasti_b_bits_id[3:0]
+@28
+TOP.io_nasti_b_bits_resp[1:0]
+TOP.io_nasti_b_ready
+TOP.io_nasti_b_valid
+@22
+TOP.io_nasti_w_bits_data[31:0]
+@28
+TOP.io_nasti_w_bits_last
+@22
+TOP.io_nasti_w_bits_strb[3:0]
+@28
+TOP.io_nasti_w_ready
+TOP.io_nasti_w_valid
 [pattern_trace] 1
 [pattern_trace] 0
