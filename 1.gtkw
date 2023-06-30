@@ -1,0 +1,96 @@
+[*]
+[*] GTKWave Analyzer v3.3.115 (w)1999-2023 BSI
+[*] Wed Jun 28 14:33:18 2023
+[*]
+[dumpfile] "/home/zpn/Documents/Pro/openCores/riscvmini/dump.fst"
+[dumpfile_mtime] "Wed Jun 28 14:32:34 2023"
+[dumpfile_size] 32878941
+[savefile] "/home/zpn/Documents/Pro/openCores/riscvmini/1.gtkw"
+[timestart] 0
+[size] 3840 2048
+[pos] 2560 64
+*-1.326578 20 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] TOP.
+[treeopen] TOP.Tile.
+[treeopen] TOP.Tile.core.
+[treeopen] TOP.Tile.core.dpath.
+[signals_width] 628
+@22
+TOP.Tile.core.dpath.pc[32:0]
+TOP.Tile.core.dpath.next_pc[32:0]
+@28
+TOP.Tile.core.dpath.stall
+@800200
+-io_cache
+@28
+[color] 2
+TOP.Tile.core.dpath.io_icache_req_valid
+@22
+[color] 2
+TOP.Tile.core.dpath.io_icache_req_bits_addr[31:0]
+@28
+[color] 2
+TOP.Tile.core.dpath.io_icache_resp_valid
+@22
+[color] 2
+TOP.Tile.core.dpath.io_icache_resp_bits_data[31:0]
+@1000200
+-io_cache
+@22
+TOP.Tile.core.dpath.fe_reg_pc[31:0]
+TOP.Tile.core.dpath.fe_reg_inst[31:0]
+@800200
+-ICache
+-cpu_io
+@28
+TOP.Tile.icache.io_cpu_abort
+TOP.Tile.icache.io_cpu_req_valid
+@22
+TOP.Tile.icache.io_cpu_req_bits_addr[31:0]
+@28
+TOP.Tile.icache.io_cpu_resp_valid
+@22
+TOP.Tile.icache.io_cpu_resp_bits_data[31:0]
+TOP.Tile.icache.io_cpu_req_bits_data[31:0]
+TOP.Tile.icache.io_cpu_req_bits_mask[3:0]
+@1000200
+-cpu_io
+@800200
+-axi
+@28
+TOP.Tile.icache.io_nasti_ar_valid
+@22
+TOP.Tile.icache.io_nasti_ar_bits_addr[31:0]
+@28
+TOP.Tile.icache.io_nasti_ar_ready
+TOP.Tile.icache.io_nasti_r_ready
+TOP.Tile.icache.io_nasti_r_valid
+@22
+TOP.Tile.icache.io_nasti_r_bits_data[63:0]
+@1000200
+-axi
+-ICache
+@28
+TOP.Tile.icache.state[2:0]
+TOP.Tile.icache.hit
+TOP.Tile.icache.is_dirty
+TOP.Tile.icache.read_wrap_out
+TOP.Tile.icache.read_count
+@22
+TOP.Tile.core.dpath.csr.io_evec[31:0]
+@28
+TOP.Tile.core.dpath.csr.io_expt
+TOP.Tile.core.dpath.csr.isEcall
+TOP.Tile.core.dpath.csr.isEbreak
+TOP.Tile.core.dpath.csr.wen
+TOP.Tile.core.dpath.csr.csrRO
+TOP.Tile.core.dpath.csr.privInst
+TOP.Tile.core.dpath.csr.privValid
+TOP.Tile.core.dpath.csr.io_cmd[2:0]
+TOP.Tile.core.dpath.csr.iaddrInvalid
+TOP.Tile.core.dpath.csr.laddrInvalid
+TOP.Tile.core.dpath.csr.saddrInvalid
+TOP.Tile.core.dpath.csr.io_illegal
+TOP.Tile.core.ctrl.io_illegal
+[pattern_trace] 1
+[pattern_trace] 0

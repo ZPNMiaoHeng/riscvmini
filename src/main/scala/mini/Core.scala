@@ -11,7 +11,7 @@ case class CoreConfig(
   makeBrCond: Int => BrCond = new BrCondSimple(_),
   makeImmGen: Int => ImmGen = new ImmGenWire(_))
 
-class HostIO(xlen: Int) extends Bundle {
+class HostIO(xlen: Int) extends Bundle {            //STUB -  csr 
   val fromhost = Flipped(Valid(UInt(xlen.W)))
   val tohost = Output(UInt(xlen.W))
 }
