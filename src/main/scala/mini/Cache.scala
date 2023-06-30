@@ -132,10 +132,10 @@ class Cache(val p: CacheConfig, val nasti: NastiBundleParameters, val xlen: Int)
   }
 
   io.nasti.ar.bits := NastiAddressBundle(nasti)(
-    0.U,
-    (Cat(tag_reg, idx_reg) << blen.U).asUInt,
-    log2Up(nasti.dataBits / 8).U,
-    (dataBeats - 1).U
+    0.U,                                              //NOTE - ar_id
+    (Cat(tag_reg, idx_reg) << blen.U).asUInt,         //NOTE - ar_addr
+    log2Up(nasti.dataBits / 8).U,                     //NOTE - ar_size log2UP(64/8)=3  //TODO - modify 2
+    (dataBeats - 1).U                                 //NOTE - ar_bits                 //TODO - modify 4
   )
   io.nasti.ar.valid := false.B
   // read data

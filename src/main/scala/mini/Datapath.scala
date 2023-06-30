@@ -7,6 +7,8 @@ import chisel3.util._
 import chisel3.experimental.BundleLiterals._
 
 object Const {
+  // val PC_START = 0x3000_0000
+  // val PC_EVEC = 0x3000_0000
   val PC_START = 0x200
   val PC_EVEC = 0x100
 }
