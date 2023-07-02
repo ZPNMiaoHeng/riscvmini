@@ -23,7 +23,7 @@ object MiniConfig {
       ),
       nasti = NastiBundleParameters(
         addrBits = 32,
-        dataBits = 32, //64,   //TODO - 32 -> axi_size=0b010
+        dataBits = 64,   //TODO - 32 -> axi_size=0b010
         idBits = 4 //5       //TODO id width -> 4 
       )
     )

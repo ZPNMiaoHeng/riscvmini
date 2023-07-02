@@ -49,7 +49,7 @@ class Cache(val p: CacheConfig, val nasti: NastiBundleParameters, val xlen: Int)
   val nWords = bBits / xlen                  // 4
   val wBytes = xlen / 8                      // 4
   val byteOffsetBits = log2Ceil(wBytes)      // 2
-  val dataBeats = bBits / nasti.dataBits     // 128/64 = 2
+  val dataBeats = bBits / nasti.dataBits     // 128/64 = 2  //NOTE - MH : ysyxSOC only support brust_size 0b010
 
   val io = IO(new CacheModuleIO(nasti, addrWidth = xlen, dataWidth = xlen))
 
@@ -134,7 +134,8 @@ class Cache(val p: CacheConfig, val nasti: NastiBundleParameters, val xlen: Int)
   io.nasti.ar.bits := NastiAddressBundle(nasti)(
     0.U,                                              //NOTE - ar_id
     (Cat(tag_reg, idx_reg) << blen.U).asUInt,         //NOTE - ar_addr
-    log2Up(nasti.dataBits / 8).U,                     //NOTE - ar_size log2UP(64/8)=3  //TODO - modify 2
+    log2Up(nasti.dataBits / 8).U,
+    // 3.U, //log2Up(nasti.dataBits / 8).U,              //NOTE - ar_size log2UP(64/8)=3, but ysyxSOC only 2
     (dataBeats - 1).U                                 //NOTE - ar_bits                 //TODO - modify 4
   )
   io.nasti.ar.valid := false.B
@@ -148,7 +149,8 @@ class Cache(val p: CacheConfig, val nasti: NastiBundleParameters, val xlen: Int)
   io.nasti.aw.bits := NastiAddressBundle(nasti)(
     0.U,
     (Cat(rmeta.tag, idx_reg) << blen.U).asUInt,
-    log2Up(nasti.dataBits / 8).U,
+    // log2Up(nasti.dataBits / 8).U,
+    2.U, ////NOTE - ar_size log2UP(64/8)=3, but ysyxSOC only 2
     (dataBeats - 1).U
   )
   io.nasti.aw.valid := false.B

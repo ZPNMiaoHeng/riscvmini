@@ -2281,42 +2281,42 @@ module Cache(
   wire [31:0] _GEN_146 = {_io_nasti_ar_bits_T, 4'h0}; // @[Cache.scala 136:28]
   wire [34:0] _io_nasti_ar_bits_T_1 = {{3'd0}, _GEN_146}; // @[Cache.scala 136:28]
   wire [27:0] _io_nasti_aw_bits_T = {metaMem_tag_rmeta_data,idx_reg}; // @[Cat.scala 31:58]
-  wire [31:0] _GEN_147 = {_io_nasti_aw_bits_T, 4'h0}; // @[Cache.scala 150:30]
-  wire [34:0] _io_nasti_aw_bits_T_1 = {{3'd0}, _GEN_147}; // @[Cache.scala 150:30]
-  wire [255:0] _is_dirty_T_2 = d >> idx_reg; // @[Cache.scala 166:33]
-  wire  is_dirty = _hit_T[0] & _is_dirty_T_2[0]; // @[Cache.scala 166:29]
-  wire [1:0] _state_T_1 = |io_cpu_req_bits_mask ? 2'h2 : 2'h1; // @[Cache.scala 170:21]
-  wire [1:0] _GEN_106 = io_cpu_req_valid ? _state_T_1 : 2'h0; // @[Cache.scala 175:32 176:17 178:17]
-  wire  _io_nasti_ar_valid_T = ~is_dirty; // @[Cache.scala 182:30]
+  wire [31:0] _GEN_147 = {_io_nasti_aw_bits_T, 4'h0}; // @[Cache.scala 151:30]
+  wire [34:0] _io_nasti_aw_bits_T_1 = {{3'd0}, _GEN_147}; // @[Cache.scala 151:30]
+  wire [255:0] _is_dirty_T_2 = d >> idx_reg; // @[Cache.scala 168:33]
+  wire  is_dirty = _hit_T[0] & _is_dirty_T_2[0]; // @[Cache.scala 168:29]
+  wire [1:0] _state_T_1 = |io_cpu_req_bits_mask ? 2'h2 : 2'h1; // @[Cache.scala 172:21]
+  wire [1:0] _GEN_106 = io_cpu_req_valid ? _state_T_1 : 2'h0; // @[Cache.scala 177:32 178:17 180:17]
+  wire  _io_nasti_ar_valid_T = ~is_dirty; // @[Cache.scala 184:30]
   wire  _T_29 = io_nasti_aw_ready & io_nasti_aw_valid; // @[Decoupled.scala 50:35]
   wire  _T_30 = io_nasti_ar_ready & io_nasti_ar_valid; // @[Decoupled.scala 50:35]
-  wire [2:0] _GEN_107 = _T_30 ? 3'h6 : state; // @[Cache.scala 185:38 186:17 58:22]
-  wire [2:0] _GEN_108 = _T_29 ? 3'h3 : _GEN_107; // @[Cache.scala 183:32 184:17]
-  wire  _GEN_110 = hit ? 1'h0 : is_dirty; // @[Cache.scala 174:17 154:21 181:27]
-  wire  _GEN_111 = hit ? 1'h0 : ~is_dirty; // @[Cache.scala 174:17 140:21 182:27]
-  wire [2:0] _GEN_114 = _wen_T | io_cpu_abort ? 3'h0 : _GEN_108; // @[Cache.scala 191:49 192:15]
-  wire  _GEN_115 = _wen_T | io_cpu_abort ? 1'h0 : is_dirty; // @[Cache.scala 154:21 191:49 194:27]
-  wire  _GEN_116 = _wen_T | io_cpu_abort ? 1'h0 : _io_nasti_ar_valid_T; // @[Cache.scala 140:21 191:49 195:27]
-  wire [2:0] _GEN_117 = write_wrap_out ? 3'h4 : state; // @[Cache.scala 205:28 206:15 58:22]
+  wire [2:0] _GEN_107 = _T_30 ? 3'h6 : state; // @[Cache.scala 187:38 188:17 58:22]
+  wire [2:0] _GEN_108 = _T_29 ? 3'h3 : _GEN_107; // @[Cache.scala 185:32 186:17]
+  wire  _GEN_110 = hit ? 1'h0 : is_dirty; // @[Cache.scala 176:17 156:21 183:27]
+  wire  _GEN_111 = hit ? 1'h0 : ~is_dirty; // @[Cache.scala 176:17 141:21 184:27]
+  wire [2:0] _GEN_114 = _wen_T | io_cpu_abort ? 3'h0 : _GEN_108; // @[Cache.scala 193:49 194:15]
+  wire  _GEN_115 = _wen_T | io_cpu_abort ? 1'h0 : is_dirty; // @[Cache.scala 156:21 193:49 196:27]
+  wire  _GEN_116 = _wen_T | io_cpu_abort ? 1'h0 : _io_nasti_ar_valid_T; // @[Cache.scala 141:21 193:49 197:27]
+  wire [2:0] _GEN_117 = write_wrap_out ? 3'h4 : state; // @[Cache.scala 207:28 208:15 58:22]
   wire  _T_44 = io_nasti_b_ready & io_nasti_b_valid; // @[Decoupled.scala 50:35]
-  wire [2:0] _GEN_118 = _T_44 ? 3'h5 : state; // @[Cache.scala 211:29 212:15 58:22]
-  wire [1:0] _state_T_5 = _io_cpu_resp_valid_T_2 ? 2'h2 : 2'h0; // @[Cache.scala 223:21]
-  wire [2:0] _GEN_120 = read_wrap_out ? {{1'd0}, _state_T_5} : state; // @[Cache.scala 222:27 223:15 58:22]
-  wire [2:0] _GEN_121 = 3'h6 == state ? _GEN_120 : state; // @[Cache.scala 167:17 58:22]
-  wire [2:0] _GEN_123 = 3'h5 == state ? _GEN_107 : _GEN_121; // @[Cache.scala 167:17]
-  wire [2:0] _GEN_125 = 3'h4 == state ? _GEN_118 : _GEN_123; // @[Cache.scala 167:17]
-  wire  _GEN_126 = 3'h4 == state ? 1'h0 : 3'h5 == state; // @[Cache.scala 167:17 140:21]
-  wire [2:0] _GEN_128 = 3'h3 == state ? _GEN_117 : _GEN_125; // @[Cache.scala 167:17]
-  wire  _GEN_129 = 3'h3 == state ? 1'h0 : 3'h4 == state; // @[Cache.scala 167:17 163:20]
-  wire  _GEN_130 = 3'h3 == state ? 1'h0 : _GEN_126; // @[Cache.scala 167:17 140:21]
-  wire  _GEN_132 = 3'h2 == state & _GEN_115; // @[Cache.scala 167:17 154:21]
-  wire  _GEN_133 = 3'h2 == state ? _GEN_116 : _GEN_130; // @[Cache.scala 167:17]
-  wire  _GEN_134 = 3'h2 == state ? 1'h0 : 3'h3 == state; // @[Cache.scala 167:17 161:20]
-  wire  _GEN_135 = 3'h2 == state ? 1'h0 : _GEN_129; // @[Cache.scala 167:17 163:20]
-  wire  _GEN_137 = 3'h1 == state ? _GEN_110 : _GEN_132; // @[Cache.scala 167:17]
-  wire  _GEN_138 = 3'h1 == state ? _GEN_111 : _GEN_133; // @[Cache.scala 167:17]
-  wire  _GEN_139 = 3'h1 == state ? 1'h0 : _GEN_134; // @[Cache.scala 167:17 161:20]
-  wire  _GEN_140 = 3'h1 == state ? 1'h0 : _GEN_135; // @[Cache.scala 167:17 163:20]
+  wire [2:0] _GEN_118 = _T_44 ? 3'h5 : state; // @[Cache.scala 213:29 214:15 58:22]
+  wire [1:0] _state_T_5 = _io_cpu_resp_valid_T_2 ? 2'h2 : 2'h0; // @[Cache.scala 225:21]
+  wire [2:0] _GEN_120 = read_wrap_out ? {{1'd0}, _state_T_5} : state; // @[Cache.scala 224:27 225:15 58:22]
+  wire [2:0] _GEN_121 = 3'h6 == state ? _GEN_120 : state; // @[Cache.scala 169:17 58:22]
+  wire [2:0] _GEN_123 = 3'h5 == state ? _GEN_107 : _GEN_121; // @[Cache.scala 169:17]
+  wire [2:0] _GEN_125 = 3'h4 == state ? _GEN_118 : _GEN_123; // @[Cache.scala 169:17]
+  wire  _GEN_126 = 3'h4 == state ? 1'h0 : 3'h5 == state; // @[Cache.scala 169:17 141:21]
+  wire [2:0] _GEN_128 = 3'h3 == state ? _GEN_117 : _GEN_125; // @[Cache.scala 169:17]
+  wire  _GEN_129 = 3'h3 == state ? 1'h0 : 3'h4 == state; // @[Cache.scala 169:17 165:20]
+  wire  _GEN_130 = 3'h3 == state ? 1'h0 : _GEN_126; // @[Cache.scala 169:17 141:21]
+  wire  _GEN_132 = 3'h2 == state & _GEN_115; // @[Cache.scala 169:17 156:21]
+  wire  _GEN_133 = 3'h2 == state ? _GEN_116 : _GEN_130; // @[Cache.scala 169:17]
+  wire  _GEN_134 = 3'h2 == state ? 1'h0 : 3'h3 == state; // @[Cache.scala 169:17 163:20]
+  wire  _GEN_135 = 3'h2 == state ? 1'h0 : _GEN_129; // @[Cache.scala 169:17 165:20]
+  wire  _GEN_137 = 3'h1 == state ? _GEN_110 : _GEN_132; // @[Cache.scala 169:17]
+  wire  _GEN_138 = 3'h1 == state ? _GEN_111 : _GEN_133; // @[Cache.scala 169:17]
+  wire  _GEN_139 = 3'h1 == state ? 1'h0 : _GEN_134; // @[Cache.scala 169:17 163:20]
+  wire  _GEN_140 = 3'h1 == state ? 1'h0 : _GEN_135; // @[Cache.scala 169:17 165:20]
   assign metaMem_tag_rmeta_en = metaMem_tag_rmeta_en_pipe_0;
   assign metaMem_tag_rmeta_addr = metaMem_tag_rmeta_addr_pipe_0;
   assign metaMem_tag_rmeta_data = metaMem_tag[metaMem_tag_rmeta_addr]; // @[Cache.scala 62:28]
@@ -2438,15 +2438,15 @@ module Cache(
   assign dataMem_3_3_MPORT_4_en = _wen_T_3 | is_alloc;
   assign io_cpu_resp_valid = is_idle | is_read & hit | is_alloc_reg & ~(|cpu_mask); // @[Cache.scala 102:50]
   assign io_cpu_resp_bits_data = 2'h3 == off_reg ? read[127:96] : _GEN_15; // @[Cache.scala 101:{25,25}]
-  assign io_nasti_aw_valid = 3'h0 == state ? 1'h0 : _GEN_137; // @[Cache.scala 167:17 154:21]
+  assign io_nasti_aw_valid = 3'h0 == state ? 1'h0 : _GEN_137; // @[Cache.scala 169:17 156:21]
   assign io_nasti_aw_bits_addr = _io_nasti_aw_bits_T_1[31:0]; // @[nasti.scala 63:18 65:13]
-  assign io_nasti_w_valid = 3'h0 == state ? 1'h0 : _GEN_139; // @[Cache.scala 167:17 161:20]
+  assign io_nasti_w_valid = 3'h0 == state ? 1'h0 : _GEN_139; // @[Cache.scala 169:17 163:20]
   assign io_nasti_w_bits_data = write_count ? read[127:64] : read[63:0]; // @[nasti.scala 94:{12,12}]
   assign io_nasti_w_bits_last = _T_1 & write_count; // @[Counter.scala 120:{16,23}]
-  assign io_nasti_b_ready = 3'h0 == state ? 1'h0 : _GEN_140; // @[Cache.scala 167:17 163:20]
-  assign io_nasti_ar_valid = 3'h0 == state ? 1'h0 : _GEN_138; // @[Cache.scala 167:17 140:21]
+  assign io_nasti_b_ready = 3'h0 == state ? 1'h0 : _GEN_140; // @[Cache.scala 169:17 165:20]
+  assign io_nasti_ar_valid = 3'h0 == state ? 1'h0 : _GEN_138; // @[Cache.scala 169:17 141:21]
   assign io_nasti_ar_bits_addr = _io_nasti_ar_bits_T_1[31:0]; // @[nasti.scala 63:18 65:13]
-  assign io_nasti_r_ready = state == 3'h6; // @[Cache.scala 142:29]
+  assign io_nasti_r_ready = state == 3'h6; // @[Cache.scala 143:29]
   always @(posedge clock) begin
     if (metaMem_tag_MPORT_en & metaMem_tag_MPORT_mask) begin
       metaMem_tag[metaMem_tag_MPORT_addr] <= metaMem_tag_MPORT_data; // @[Cache.scala 62:28]
@@ -2569,17 +2569,17 @@ module Cache(
     end
     if (reset) begin // @[Cache.scala 58:22]
       state <= 3'h0; // @[Cache.scala 58:22]
-    end else if (3'h0 == state) begin // @[Cache.scala 167:17]
-      if (io_cpu_req_valid) begin // @[Cache.scala 169:30]
-        state <= {{1'd0}, _state_T_1}; // @[Cache.scala 170:15]
+    end else if (3'h0 == state) begin // @[Cache.scala 169:17]
+      if (io_cpu_req_valid) begin // @[Cache.scala 171:30]
+        state <= {{1'd0}, _state_T_1}; // @[Cache.scala 172:15]
       end
-    end else if (3'h1 == state) begin // @[Cache.scala 167:17]
-      if (hit) begin // @[Cache.scala 174:17]
+    end else if (3'h1 == state) begin // @[Cache.scala 169:17]
+      if (hit) begin // @[Cache.scala 176:17]
         state <= {{1'd0}, _GEN_106};
       end else begin
         state <= _GEN_108;
       end
-    end else if (3'h2 == state) begin // @[Cache.scala 167:17]
+    end else if (3'h2 == state) begin // @[Cache.scala 169:17]
       state <= _GEN_114;
     end else begin
       state <= _GEN_128;
@@ -2622,14 +2622,14 @@ module Cache(
     if (ren_reg) begin // @[Reg.scala 17:18]
       rdata_buf <= rdata; // @[Reg.scala 17:22]
     end
-    if (_T) begin // @[Cache.scala 143:25]
-      if (~read_count) begin // @[Cache.scala 144:28]
-        refill_buf_0 <= io_nasti_r_bits_data; // @[Cache.scala 144:28]
+    if (_T) begin // @[Cache.scala 144:25]
+      if (~read_count) begin // @[Cache.scala 145:28]
+        refill_buf_0 <= io_nasti_r_bits_data; // @[Cache.scala 145:28]
       end
     end
-    if (_T) begin // @[Cache.scala 143:25]
-      if (read_count) begin // @[Cache.scala 144:28]
-        refill_buf_1 <= io_nasti_r_bits_data; // @[Cache.scala 144:28]
+    if (_T) begin // @[Cache.scala 144:25]
+      if (read_count) begin // @[Cache.scala 145:28]
+        refill_buf_1 <= io_nasti_r_bits_data; // @[Cache.scala 145:28]
       end
     end
   end
@@ -2980,7 +2980,7 @@ module Tile(
   output [31:0] io_host_tohost,
   input         io_nasti_aw_ready,
   output        io_nasti_aw_valid,
-  output [4:0]  io_nasti_aw_bits_id,
+  output [3:0]  io_nasti_aw_bits_id,
   output [31:0] io_nasti_aw_bits_addr,
   output [7:0]  io_nasti_aw_bits_len,
   output [2:0]  io_nasti_aw_bits_size,
@@ -2996,11 +2996,11 @@ module Tile(
   output        io_nasti_w_bits_last,
   output        io_nasti_b_ready,
   input         io_nasti_b_valid,
-  input  [4:0]  io_nasti_b_bits_id,
+  input  [3:0]  io_nasti_b_bits_id,
   input  [1:0]  io_nasti_b_bits_resp,
   input         io_nasti_ar_ready,
   output        io_nasti_ar_valid,
-  output [4:0]  io_nasti_ar_bits_id,
+  output [3:0]  io_nasti_ar_bits_id,
   output [31:0] io_nasti_ar_bits_addr,
   output [7:0]  io_nasti_ar_bits_len,
   output [2:0]  io_nasti_ar_bits_size,
@@ -3011,7 +3011,7 @@ module Tile(
   output [3:0]  io_nasti_ar_bits_qos,
   output        io_nasti_r_ready,
   input         io_nasti_r_valid,
-  input  [4:0]  io_nasti_r_bits_id,
+  input  [3:0]  io_nasti_r_bits_id,
   input  [63:0] io_nasti_r_bits_data,
   input  [1:0]  io_nasti_r_bits_resp,
   input         io_nasti_r_bits_last
@@ -3232,10 +3232,10 @@ module Tile(
   );
   assign io_host_tohost = core_io_host_tohost; // @[Tile.scala 114:11]
   assign io_nasti_aw_valid = arb_io_nasti_aw_valid; // @[Tile.scala 119:12]
-  assign io_nasti_aw_bits_id = 5'h0; // @[Tile.scala 119:12]
+  assign io_nasti_aw_bits_id = 4'h0; // @[Tile.scala 119:12]
   assign io_nasti_aw_bits_addr = arb_io_nasti_aw_bits_addr; // @[Tile.scala 119:12]
   assign io_nasti_aw_bits_len = 8'h1; // @[Tile.scala 119:12]
-  assign io_nasti_aw_bits_size = 3'h3; // @[Tile.scala 119:12]
+  assign io_nasti_aw_bits_size = 3'h2; // @[Tile.scala 119:12]
   assign io_nasti_aw_bits_burst = 2'h1; // @[Tile.scala 119:12]
   assign io_nasti_aw_bits_lock = 1'h0; // @[Tile.scala 119:12]
   assign io_nasti_aw_bits_cache = 4'h0; // @[Tile.scala 119:12]
@@ -3247,7 +3247,7 @@ module Tile(
   assign io_nasti_w_bits_last = arb_io_nasti_w_bits_last; // @[Tile.scala 119:12]
   assign io_nasti_b_ready = arb_io_nasti_b_ready; // @[Tile.scala 119:12]
   assign io_nasti_ar_valid = arb_io_nasti_ar_valid; // @[Tile.scala 119:12]
-  assign io_nasti_ar_bits_id = 5'h0; // @[Tile.scala 119:12]
+  assign io_nasti_ar_bits_id = 4'h0; // @[Tile.scala 119:12]
   assign io_nasti_ar_bits_addr = arb_io_nasti_ar_bits_addr; // @[Tile.scala 119:12]
   assign io_nasti_ar_bits_len = 8'h1; // @[Tile.scala 119:12]
   assign io_nasti_ar_bits_size = 3'h3; // @[Tile.scala 119:12]
