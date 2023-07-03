@@ -141,7 +141,13 @@ class Datapath(val conf: CoreConfig) extends Module {
   brCond.io.br_type := io.ctrl.br_type
 
   // D$ access
-  val daddr = Mux(stall, ew_reg.alu, alu.io.sum) >> 2.U << 2.U
+//  val daddr = Mux(stall, ew_reg.alu, alu.io.sum) >> 2.U << 2.U                    // NOTE - uart no align <0x1000_0000-0x1000_0FFF>
+ val daddrT = Mux(stall, ew_reg.alu, alu.io.sum) 
+ val daddr = Mux(daddrT < "h1000_0000".U || daddrT > "h1000_0FFFF".U, daddrT >> 2.U << 2.U, daddrT)                    // NOTE - uart no align <0x1000_0000-0x1000_0FFF>
+
+
+
+ 
   val woffset = (alu.io.sum(1) << 4.U).asUInt | (alu.io.sum(0) << 3.U).asUInt
   io.dcache.req.valid := !stall && (io.ctrl.st_type.orR || io.ctrl.ld_type.orR)
   io.dcache.req.bits.addr := daddr
