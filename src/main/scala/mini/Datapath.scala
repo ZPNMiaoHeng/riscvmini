@@ -11,12 +11,25 @@ object Const {
   val PC_EVEC = 0x3000_0000
   // val PC_START = 0x200
   // val PC_EVEC = 0x100
+
+  //NOTE - UART:0x1000_0000~0x1000_0FFF
+  val UART_BASE = 0x1000_0000
+  val UART_MASK = 0xFFFF_F000
+  //NOTE - FLASH:0x3000_0000~0x3FFF_FFFF
+  val FLASH_BASE = 0x3000_0000
+  val FLASH_MASK = 0xF000_0000
+  //NOTE - MEM :0x8000_0000~0xFBFF_FFFF SDRAM：0xFC00_0000~0xFFFF_FFFF
+  val MEM_BASE = 0x8000_0000
+  val MEM_MASK = 0x8000_0000
+
+
 }
 
 class DatapathIO(xlen: Int) extends Bundle {
   val host = new HostIO(xlen)
   val icache = Flipped(new CacheIO(xlen, xlen))
   val dcache = Flipped(new CacheIO(xlen, xlen))
+  val uart = Flipped(new CacheIO(xlen, xlen))
   val ctrl = Flipped(new ControlSignals)
 }
 
@@ -80,7 +93,7 @@ class Datapath(val conf: CoreConfig) extends Module {
   /** **** Fetch ****
     */
   val started = RegNext(reset.asBool)
-  val stall = !io.icache.resp.valid || !io.dcache.resp.valid
+  val stall = !io.icache.resp.valid || !io.dcache.resp.valid || !io.uart.resp.valid
   val pc = RegInit(Const.PC_START.U(conf.xlen.W) - 4.U(conf.xlen.W))
   // Next Program Counter
   val next_pc = MuxCase(
@@ -99,7 +112,7 @@ class Datapath(val conf: CoreConfig) extends Module {
   io.icache.req.bits.addr := next_pc
   io.icache.req.bits.data := 0.U
   io.icache.req.bits.mask := 0.U
-  io.icache.req.valid := !stall
+  io.icache.req.valid := !stall && mem_en
   io.icache.abort := false.B
 
   // Pipelining
@@ -141,15 +154,26 @@ class Datapath(val conf: CoreConfig) extends Module {
   brCond.io.br_type := io.ctrl.br_type
 
   // D$ access
-//  val daddr = Mux(stall, ew_reg.alu, alu.io.sum) >> 2.U << 2.U                    // NOTE - uart no align <0x1000_0000-0x1000_0FFF>
- val daddrT = Mux(stall, ew_reg.alu, alu.io.sum) 
- val daddr = Mux(daddrT < "h1000_0000".U || daddrT > "h1000_0FFFF".U, daddrT >> 2.U << 2.U, daddrT)                    // NOTE - uart no align <0x1000_0000-0x1000_0FFF>
+//  val daddr = Mux(stall, ew_reg.alu, alu.io.sum) >> 2.U << 2.U
+ val daddrT = Mux(stall, ew_reg.alu, alu.io.sum)
+ val uart_en = (daddrT & UART_MASK) === UART_BASE
+ val mem_en = ((daddrT & FLASH_MASK) === FLASH_BASE) || ((daddrT & MEM_MASK) === MEM_BASE)
+ val daddr = Mux(mem_en, daddrT >> 2.U << 2.U, daddrT)
+ val other_mem = !uart_en && !mem_en          //TODO - other memery 
+
+//* uart io : no aglin
+  io.uart.req.valid := !stall && (io.ctrl.st_type.orR || io.ctrl.ld_type.orR) && uart_en
+  io.uart.req.bits.addr := daddrT
+  io.uart.req.bits.data := rs2
+  io.uart.req.bits.mask := MuxLookup(       //FIXME - notice modidy
+    Mux(stall, st_type, io.ctrl.st_type),
+    "b0000".U,
+    Seq(ST_SW -> "b1111".U, ST_SH -> ("b11".U << alu.io.sum(1, 0)), ST_SB -> ("b1".U << alu.io.sum(1, 0)))
+  )
 
 
-
- 
   val woffset = (alu.io.sum(1) << 4.U).asUInt | (alu.io.sum(0) << 3.U).asUInt
-  io.dcache.req.valid := !stall && (io.ctrl.st_type.orR || io.ctrl.ld_type.orR)
+  io.dcache.req.valid := !stall && (io.ctrl.st_type.orR || io.ctrl.ld_type.orR) && mem_en
   io.dcache.req.bits.addr := daddr
   io.dcache.req.bits.data := rs2 << woffset
   io.dcache.req.bits.mask := MuxLookup(

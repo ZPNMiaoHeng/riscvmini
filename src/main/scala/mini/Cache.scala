@@ -68,8 +68,8 @@ class Cache(val p: CacheConfig, val nasti: NastiBundleParameters, val xlen: Int)
 
   // Counters
   require(dataBeats > 0)
-  val (read_count, read_wrap_out) = Counter(io.nasti.r.fire, dataBeats)     // FIXME: 突发传输统计：64 * 2；size=0b011, brust=0b01-INCR, LEN=1
-  val (write_count, write_wrap_out) = Counter(io.nasti.w.fire, dataBeats)   // NOTE
+  val (read_count, read_wrap_out) = Counter(io.nasti.r.fire, dataBeats)     // 突发传输,未使用last：64 * 2；size=0b011, brust=0b01-INCR, LEN=1
+  val (write_count, write_wrap_out) = Counter(io.nasti.w.fire, dataBeats)
 
   val is_idle = state === sIdle
   val is_read = state === sReadCache
@@ -98,7 +98,7 @@ class Cache(val p: CacheConfig, val nasti: NastiBundleParameters, val xlen: Int)
   hit := v(idx_reg) && rmeta.tag === tag_reg         //ANCHOR - 为啥 v中使用idx_reg呢
 
   // Read Mux
-  io.cpu.resp.bits.data := VecInit.tabulate(nWords)(i => read((i + 1) * xlen - 1, i * xlen))(off_reg) //FIXME - 
+  io.cpu.resp.bits.data := VecInit.tabulate(nWords)(i => read((i + 1) * xlen - 1, i * xlen))(off_reg) //FIXME - 应该是buf
   io.cpu.resp.valid := is_idle || is_read && hit || is_alloc_reg && !cpu_mask.orR    //NOTE - 
 
   when(io.cpu.resp.valid) {
@@ -142,15 +142,15 @@ class Cache(val p: CacheConfig, val nasti: NastiBundleParameters, val xlen: Int)
   // read data
   io.nasti.r.ready := state === sRefill
   when(io.nasti.r.fire) {
-    refill_buf(read_count) := io.nasti.r.bits.data
+    refill_buf(read_count) := io.nasti.r.bits.data    // NOTE - learn to do ?
   }
 
   // write addr
   io.nasti.aw.bits := NastiAddressBundle(nasti)(
     0.U,
     (Cat(rmeta.tag, idx_reg) << blen.U).asUInt,
-    // log2Up(nasti.dataBits / 8).U,
-    2.U, ////NOTE - ar_size log2UP(64/8)=3, but ysyxSOC only 2
+    log2Up(nasti.dataBits / 8).U,
+    // 2.U, ////NOTE - ar_size log2UP(64/8)=3, but ysyxSOC only 2
     (dataBeats - 1).U
   )
   io.nasti.aw.valid := false.B

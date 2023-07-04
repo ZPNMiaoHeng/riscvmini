@@ -20,6 +20,7 @@ class CoreIO(xlen: Int) extends Bundle {
   val host = new HostIO(xlen)
   val icache = Flipped(new CacheIO(xlen, xlen))
   val dcache = Flipped(new CacheIO(xlen, xlen))
+  val uart = Flipped(new CacheIO(xlen, xlen))
 }
 
 class Core(val conf: CoreConfig) extends Module {
@@ -30,5 +31,6 @@ class Core(val conf: CoreConfig) extends Module {
   io.host <> dpath.io.host
   dpath.io.icache <> io.icache
   dpath.io.dcache <> io.dcache
+  dpath.io.uart <> io.uart
   dpath.io.ctrl <> ctrl.io
 }
