@@ -79,7 +79,7 @@ class Cache(val p: CacheConfig, val nasti: NastiBundleParameters, val xlen: Int)
 
   val hit = Wire(Bool())
   val wen = is_write && (hit || is_alloc_reg) && !io.cpu.abort || is_alloc
-  val ren = !wen && (is_idle || is_read) && io.cpu.req.valid                //NOTE - wen > ren
+  val ren = !wen && (is_idle || is_read) && io.cpu.req.valid
   val ren_reg = RegNext(ren)
 
   val addr = io.cpu.req.bits.addr
@@ -125,7 +125,7 @@ class Cache(val p: CacheConfig, val nasti: NastiBundleParameters, val xlen: Int)
     }
     dataMem.zipWithIndex.foreach {
       case (mem, i) =>
-        val data = VecInit.tabulate(wBytes)(k => wdata(i * xlen + (k + 1) * 8 - 1, i * xlen + k * 8))
+        val data = VecInit.tabulate(wBytes)(k => wdata(i * xlen + (k + 1) * 8 - 1, i * xlen + k * 8)) // i=0: wdata(7, 0), wdata(15, 8) wdata(23, 16), wdata(31, 24)
         mem.write(idx_reg, data, wmask((i + 1) * wBytes - 1, i * wBytes).asBools())
         mem.suggestName(s"dataMem_${i}")
     }

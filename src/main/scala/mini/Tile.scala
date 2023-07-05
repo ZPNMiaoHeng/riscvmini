@@ -25,7 +25,7 @@ class MemArbiter(params: NastiBundleParameters) extends Module {
   val state = RegInit(sIdle)
 
   // Write Address
-  // io.nasti.aw.bits := io.dcache.aw.bits || io.uart.aw.bits    //FIXME - true??
+  // io.nasti.aw.bits := io.dcache.aw.bits
   io.nasti.aw.bits := NastiAddressBundle(params)(
     Mux(io.dcache.aw.valid, io.dcache.aw.bits.id,   io.uart.aw.bits.id),
     Mux(io.dcache.aw.valid, io.dcache.aw.bits.addr, io.uart.aw.bits.addr),
@@ -39,12 +39,13 @@ class MemArbiter(params: NastiBundleParameters) extends Module {
   io.icache.aw := DontCare
 
   // Write Data
-  // io.nasti.w.bits := io.dcache.w.bits || io.uart.aw.bits      // FIXME - true ??
-  io.nasti.w.bits := NastiAddressBundle(params)(
-    Mux(io.dcache.w.valid, io.dcache.w.bits.id,   io.uart.w.bits.id),
-    Mux(io.dcache.w.valid, io.dcache.w.bits.addr, io.uart.w.bits.addr),
-    Mux(io.dcache.w.valid, io.dcache.w.bits.size, io.uart.w.bits.size),
-    Mux(io.dcache.w.valid, io.dcache.w.bits.len,  io.uart.w.bits.len)
+  // io.nasti.w.bits := io.dcache.w.bits
+  io.nasti.w.bits := NastiWriteDataBundle(params)(
+    // Mux(io.dcache.w.valid, io.dcache.w.bits.id,   io.uart.w.bits.id),
+    Mux(io.dcache.w.valid, io.dcache.w.bits.data, io.uart.w.bits.data),
+    Mux(io.dcache.w.valid, Some(io.dcache.w.bits.strb), Some(io.uart.w.bits.strb)),   // FIXME - how to do ?
+    // Mux(io.dcache.w.valid, Some(io.dcache.w.bits.strb).asInstanceOf[Option[chisel3.UInt]], Some(io.uart.w.bits.strb).asInstanceOf[Option[chisel3.UInt]]),   // FIXME - how to do ?
+    Mux(io.dcache.w.valid, io.dcache.w.bits.last,  io.uart.w.bits.last)
   )
 
 
@@ -63,10 +64,10 @@ class MemArbiter(params: NastiBundleParameters) extends Module {
 
   // Read Address
   io.nasti.ar.bits := NastiAddressBundle(params)(
-    Mux(io.dcache.ar.valid, io.dcache.ar.bits.id  ,Mux(io.icache.ar.valid, io.icache.ar.bits.id  ,io.uart.ar.bits.id),
-    Mux(io.dcache.ar.valid, io.dcache.ar.bits.addr,Mux(io.icache.ar.valid, io.icache.ar.bits.addr,io.uart.ar.bits.addr),
-    Mux(io.dcache.ar.valid, io.dcache.ar.bits.size,Mux(io.icache.ar.valid, io.icache.ar.bits.size,io.uart.ar.bits.size),
-    Mux(io.dcache.ar.valid, io.dcache.ar.bits.len ,Mux(io.icache.ar.valid, io.icache.ar.bits.len ,io.uart.ar.bits.len)
+    Mux(io.dcache.ar.valid, io.dcache.ar.bits.id  ,Mux(io.icache.ar.valid, io.icache.ar.bits.id  ,io.uart.ar.bits.id)),
+    Mux(io.dcache.ar.valid, io.dcache.ar.bits.addr,Mux(io.icache.ar.valid, io.icache.ar.bits.addr,io.uart.ar.bits.addr)),
+    Mux(io.dcache.ar.valid, io.dcache.ar.bits.size,Mux(io.icache.ar.valid, io.icache.ar.bits.size,io.uart.ar.bits.size)),
+    Mux(io.dcache.ar.valid, io.dcache.ar.bits.len ,Mux(io.icache.ar.valid, io.icache.ar.bits.len ,io.uart.ar.bits.len))
   )
   io.nasti.ar.valid := (io.icache.ar.valid || io.dcache.ar.valid || io.uart.ar.valid) &&
     !io.nasti.aw.valid && state === sIdle

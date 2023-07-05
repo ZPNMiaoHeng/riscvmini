@@ -154,11 +154,12 @@ class Datapath(val conf: CoreConfig) extends Module {
   brCond.io.br_type := io.ctrl.br_type
 
   // D$ access
+import Const._
 //  val daddr = Mux(stall, ew_reg.alu, alu.io.sum) >> 2.U << 2.U
  val daddrT = Mux(stall, ew_reg.alu, alu.io.sum)
- val uart_en = (daddrT & UART_MASK) === UART_BASE
- val mem_en = ((daddrT & FLASH_MASK) === FLASH_BASE) || ((daddrT & MEM_MASK) === MEM_BASE)
- val daddr = Fill(mem_en, 32.U) & (daddrT >> 2.U << 2.U)
+ val uart_en = (daddrT & UART_MASK.U) === UART_BASE.U
+ val mem_en = ((daddrT & FLASH_MASK.U) === FLASH_BASE.U) || ((daddrT & MEM_MASK.U) === MEM_BASE.U)
+ val daddr = Fill(32, mem_en.asUInt()) & (daddrT >> 2.U << 2.U)
  val other_mem = !uart_en && !mem_en          //TODO - other memery add assert
 
 //* uart io : no aglin

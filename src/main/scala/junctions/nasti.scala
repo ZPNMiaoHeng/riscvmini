@@ -86,10 +86,11 @@ object NastiWriteDataBundle {
   def apply(
     params: NastiBundleParameters
   )(data:   UInt,
-    strb:   Option[UInt] = None,
+    strb:   Option[UInt] = None,   //NOTE - 可选的无符号整数 UInt,默认为None,表示不进行字节选择。
     last:   Bool = true.B
   ): NastiWriteDataBundle = {
     val w = Wire(new NastiWriteDataBundle(params))
+    //NOTE - 如果提供了 strb 参数，则将其赋值给 w.strb。如果没有提供 strb 参数，则使用 Fill 函数将一个由全 1 构成的信号重复填充，位宽为 params.dataBits/8，并将结果赋值给 w.strb。
     w.strb := strb.getOrElse(Fill(params.dataBits / 8, 1.U))
     w.data := data
     w.last := last

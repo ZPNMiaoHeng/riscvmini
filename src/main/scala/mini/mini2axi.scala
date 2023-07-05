@@ -64,7 +64,7 @@ class Uart(val nasti: NastiBundleParameters, val xlen: Int) extends Module {
     val is_write_back = state === sWriteBack
 
       // Read Mux
-    io.cpu.resp.bits.data := Fill(32.U, !io.cpu.req.bits.mask.orR) & io.nasti.r.data
+    io.cpu.resp.bits.data := Fill(32, !io.cpu.req.bits.mask.orR) & io.nasti.r.bits.data
     io.cpu.resp.valid := is_idle || io.nasti.r.fire || io.nasti.b.fire 
 
     // transform 32-byte data
@@ -75,7 +75,7 @@ class Uart(val nasti: NastiBundleParameters, val xlen: Int) extends Module {
         0.U                           // len
     )
     io.nasti.ar.valid := false.B
-    io.nasti.r.read := is_read_data
+    io.nasti.r.ready := is_read_data
     
 
     io.nasti.aw.bits := NastiAddressBundle(nasti)(
@@ -85,7 +85,7 @@ class Uart(val nasti: NastiBundleParameters, val xlen: Int) extends Module {
         0.U
     )
     io.nasti.aw.valid := false.B
-    io.nasti.w.bits := NastiAddressBundle(nasti)(
+    io.nasti.w.bits := NastiWriteDataBundle(nasti)(
         io.cpu.req.bits.data,
         io.cpu.req.bits.mask//,
         //0.U
