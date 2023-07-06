@@ -8,7 +8,7 @@ import chisel3.util._
 object NastiConstants {
   // These are all fixed by the standard:
   val LenBits = 8  
-  val SizeBits = 3      //FIXME - iEDA only support 32bits
+  val SizeBits = 3
   val BurstBits = 2          // INCR
   val LockBits = 1
   val CacheBits = 4
@@ -49,7 +49,7 @@ case class NastiBundleParameters(
 class NastiAddressBundle(params: NastiBundleParameters) extends Bundle {
   val id = UInt(params.idBits.W)
   val addr = UInt(params.addrBits.W)
-  val len = UInt(NastiConstants.LenBits.W) // number of beats - 1  //FIXME - ???
+  val len = UInt(NastiConstants.LenBits.W) // number of beats - 1
   val size = UInt(NastiConstants.SizeBits.W) // bytes in beat = 2^size
   val burst = UInt(NastiConstants.BurstBits.W)
   val lock = UInt(NastiConstants.LockBits.W)
@@ -65,7 +65,7 @@ object NastiAddressBundle {
     aw.addr := addr
     aw.len := len
     aw.size := size
-    aw.burst := NastiConstants.BurstIncr   //NOTE - brust_mode
+    aw.burst := NastiConstants.BurstIncr
     aw.lock := false.B
     aw.cache := 0.U
     aw.prot := 0.U
@@ -78,7 +78,7 @@ object NastiAddressBundle {
 class NastiWriteDataBundle(params: NastiBundleParameters) extends Bundle {
   // id removed
   val data = UInt(params.dataBits.W)
-  val strb = UInt((params.dataBits / 8).W)
+  val strb = UInt((params.dataBits / 8).W)  // 8.W
   val last = Bool()
 }
 

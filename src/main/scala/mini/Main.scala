@@ -6,7 +6,7 @@ import chisel3.stage.ChiselGeneratorAnnotation
 import firrtl.options.TargetDirAnnotation
 
 object Main extends App {
-  val targetDirectory = args.head   //LINK - ??
+  val targetDirectory = args.head   //STUB - function
   val config = MiniConfig()
   new chisel3.stage.ChiselStage().execute(
     args,

@@ -21,8 +21,6 @@ object Const {
   //NOTE - MEM :0x8000_0000~0xFBFF_FFFF SDRAM：0xFC00_0000~0xFFFF_FFFF
   val MEM_BASE = 0x8000_0000
   val MEM_MASK = 0x8000_0000
-
-
 }
 
 class DatapathIO(xlen: Int) extends Bundle {
@@ -89,6 +87,7 @@ class Datapath(val conf: CoreConfig) extends Module {
   val csr_cmd = Reg(io.ctrl.csr_cmd.cloneType)
   val illegal = Reg(Bool())
   val pc_check = Reg(Bool())
+  val mem_en = Wire(Bool())
 
   /** **** Fetch ****
     */
@@ -157,12 +156,15 @@ class Datapath(val conf: CoreConfig) extends Module {
 import Const._
 //  val daddr = Mux(stall, ew_reg.alu, alu.io.sum) >> 2.U << 2.U
  val daddrT = Mux(stall, ew_reg.alu, alu.io.sum)
- val uart_en = (daddrT & UART_MASK.U) === UART_BASE.U
- val mem_en = ((daddrT & FLASH_MASK.U) === FLASH_BASE.U) || ((daddrT & MEM_MASK.U) === MEM_BASE.U)
+//  val uart_en = ((daddrT & UART_MASK.U) === UART_BASE.U)
+ val uart_en = (daddrT(31, 12) === 0x1000_0.U)
+//  mem_en := ((daddrT & FLASH_MASK.U) === FLASH_BASE.U) || ((daddrT & MEM_MASK.U) === MEM_BASE.U)
+ mem_en := (daddrT(31, 28) === 0x3.U) || (daddrT(31, 31) === 0x1.U)
  val daddr = Fill(32, mem_en.asUInt()) & (daddrT >> 2.U << 2.U)
  val other_mem = !uart_en && !mem_en          //TODO - other memery add assert
 
 //* uart io : no aglin
+  io.uart.abort := false.B
   io.uart.req.valid := !stall && (io.ctrl.st_type.orR || io.ctrl.ld_type.orR) && uart_en
   io.uart.req.bits.addr := daddrT
   io.uart.req.bits.data := rs2

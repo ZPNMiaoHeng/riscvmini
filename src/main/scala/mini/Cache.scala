@@ -90,7 +90,7 @@ class Cache(val p: CacheConfig, val nasti: NastiBundleParameters, val xlen: Int)
   val off_reg = addr_reg(blen - 1, byteOffsetBits)    // [1:0]  = addr [3, 2]
 
   val rmeta = metaMem.read(idx, ren)                                                    //NOTE - 传入 idx 和ren ，输出tag
-  val rdata = Cat((dataMem.map(_.read(idx, ren).asUInt)).reverse)  //FIXME - 
+  val rdata = Cat((dataMem.map(_.read(idx, ren).asUInt)).reverse)
   val rdata_buf = RegEnable(rdata, ren_reg)
   val refill_buf = Reg(Vec(dataBeats, UInt(nasti.dataBits.W)))
   val read = Mux(is_alloc_reg, refill_buf.asUInt, Mux(ren_reg, rdata, rdata_buf))
@@ -98,7 +98,7 @@ class Cache(val p: CacheConfig, val nasti: NastiBundleParameters, val xlen: Int)
   hit := v(idx_reg) && rmeta.tag === tag_reg         //ANCHOR - 为啥 v中使用idx_reg呢
 
   // Read Mux
-  io.cpu.resp.bits.data := VecInit.tabulate(nWords)(i => read((i + 1) * xlen - 1, i * xlen))(off_reg) //FIXME - 应该是buf
+  io.cpu.resp.bits.data := VecInit.tabulate(nWords)(i => read((i + 1) * xlen - 1, i * xlen))(off_reg) //FIXME - function
   io.cpu.resp.valid := is_idle || is_read && hit || is_alloc_reg && !cpu_mask.orR    //NOTE - 
 
   when(io.cpu.resp.valid) {

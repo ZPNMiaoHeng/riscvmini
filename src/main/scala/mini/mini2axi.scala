@@ -87,7 +87,7 @@ class Uart(val nasti: NastiBundleParameters, val xlen: Int) extends Module {
     io.nasti.aw.valid := false.B
     io.nasti.w.bits := NastiWriteDataBundle(nasti)(
         io.cpu.req.bits.data,
-        io.cpu.req.bits.mask//,
+        Some(io.cpu.req.bits.mask)//,
         //0.U
     )
     io.nasti.w.valid := false.B

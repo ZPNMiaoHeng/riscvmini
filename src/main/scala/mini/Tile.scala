@@ -43,8 +43,7 @@ class MemArbiter(params: NastiBundleParameters) extends Module {
   io.nasti.w.bits := NastiWriteDataBundle(params)(
     // Mux(io.dcache.w.valid, io.dcache.w.bits.id,   io.uart.w.bits.id),
     Mux(io.dcache.w.valid, io.dcache.w.bits.data, io.uart.w.bits.data),
-    Mux(io.dcache.w.valid, Some(io.dcache.w.bits.strb), Some(io.uart.w.bits.strb)),   // FIXME - how to do ?
-    // Mux(io.dcache.w.valid, Some(io.dcache.w.bits.strb).asInstanceOf[Option[chisel3.UInt]], Some(io.uart.w.bits.strb).asInstanceOf[Option[chisel3.UInt]]),   // FIXME - how to do ?
+    Some(Mux(io.dcache.w.valid, io.dcache.w.bits.strb, io.uart.w.bits.strb)),
     Mux(io.dcache.w.valid, io.dcache.w.bits.last,  io.uart.w.bits.last)
   )
 
@@ -127,10 +126,10 @@ class MemArbiter(params: NastiBundleParameters) extends Module {
     }
     is(sUartWrite){
       when(io.uart.w.fire && io.uart.w.bits.last) {
-        state := sDCacheAck
+        state := sUartAck
       }
     }
-    is(sDCacheAck) {
+    is(sUartAck) {
       when(io.nasti.b.fire) {
         state := sIdle
       }
