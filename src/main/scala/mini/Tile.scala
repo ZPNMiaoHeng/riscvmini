@@ -55,9 +55,9 @@ class MemArbiter(params: NastiBundleParameters) extends Module {
 
   // Write Ack
   io.dcache.b.bits := io.nasti.b.bits
-  io.uart.b.bits := io.uart.b.bits
+  io.uart.b.bits := io.nasti.b.bits
   io.dcache.b.valid := io.nasti.b.valid && state === sDCacheAck
-  io.uart.b.valid := io.uart.b.valid && state === sUartAck
+  io.uart.b.valid := io.nasti.b.valid && state === sUartAck
   io.nasti.b.ready := (io.dcache.b.ready && state === sDCacheAck) || (io.uart.b.ready && state === sUartAck) 
   io.icache.b := DontCare
 
