@@ -63,6 +63,9 @@ class Uart(val nasti: NastiBundleParameters, val xlen: Int) extends Module {
     val is_write_data = state === sWriteData
     val is_write_back = state === sWriteBack
 
+    val reg_mask = RegInit(0.U(4.W))
+    val reg_data = RegInit(0.U(xlen.W))
+
       // Read Mux
     io.cpu.resp.bits.data := Fill(32, !io.cpu.req.bits.mask.orR) & io.nasti.r.bits.data
     io.cpu.resp.valid := is_idle || io.nasti.r.fire || io.nasti.b.fire 
@@ -85,9 +88,14 @@ class Uart(val nasti: NastiBundleParameters, val xlen: Int) extends Module {
         0.U
     )
     io.nasti.aw.valid := false.B
+    // io.nasti.w.bits := NastiWriteDataBundle(nasti)(
+        // io.cpu.req.bits.data,
+        // Some(io.cpu.req.bits.mask)//,
+        // 0.U
+    // )
     io.nasti.w.bits := NastiWriteDataBundle(nasti)(
-        io.cpu.req.bits.data,
-        Some(io.cpu.req.bits.mask)//,
+        reg_data,
+        Some(reg_mask)//,
         //0.U
     )
     io.nasti.w.valid := false.B
@@ -97,6 +105,8 @@ class Uart(val nasti: NastiBundleParameters, val xlen: Int) extends Module {
     switch(state) {
         is(sIdle) {
             when(io.cpu.req.valid) {
+                reg_data := io.cpu.req.bits.data
+                reg_mask := io.cpu.req.bits.mask
                 state := Mux(io.cpu.req.bits.mask.orR, sWriteAddr, sReadAddr)
             }
         }

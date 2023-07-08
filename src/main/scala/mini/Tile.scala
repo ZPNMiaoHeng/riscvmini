@@ -48,7 +48,7 @@ class MemArbiter(params: NastiBundleParameters) extends Module {
   )
 
 
-  io.nasti.w.valid := (io.dcache.w.valid || io.uart.w.valid ) && state === sDCacheWrite
+  io.nasti.w.valid := (io.dcache.w.valid && state === sDCacheWrite) || (io.uart.w.valid && state === sUartWrite )
   io.dcache.w.ready := io.nasti.w.ready && state === sDCacheWrite
   io.uart.w.ready := io.nasti.w.ready && state === sUartWrite
   io.icache.w := DontCare

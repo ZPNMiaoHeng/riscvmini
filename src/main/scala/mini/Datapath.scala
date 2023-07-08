@@ -167,20 +167,21 @@ import Const._
  val daddr = Fill(32, mem_dcache_en.asUInt()) & (daddrT >> 2.U << 2.U)
  val other_mem = !mem_uart_en && !mem_dcache_en          //SECTION - other memery add assert
 
+ val woffset = (alu.io.sum(1) << 4.U).asUInt | (alu.io.sum(0) << 3.U).asUInt
 //* uart io : no aglin
   io.uart.abort := false.B
   // io.uart.req.valid := !stall && (Mux((io.ctrl.st_type.orR || io.ctrl.ld_type.orR), mem_uart_en, if_uart_en)
   io.uart.req.valid := !stall && (io.ctrl.st_type.orR || io.ctrl.ld_type.orR) && mem_uart_en
   io.uart.req.bits.addr := daddrT
-  io.uart.req.bits.data := rs2
+  io.uart.req.bits.data := rs2 << woffset
   io.uart.req.bits.mask := MuxLookup(       //FIXME - notice modidy
     Mux(stall, st_type, io.ctrl.st_type),
     "b0000".U,
     Seq(ST_SW -> "b1111".U, ST_SH -> ("b11".U << alu.io.sum(1, 0)), ST_SB -> ("b1".U << alu.io.sum(1, 0)))
   )
+  // io.uart.resp.valid :=  //FIXME - 
+  // io.uart.resp.data :=  //FIXME - 
 
-
-  val woffset = (alu.io.sum(1) << 4.U).asUInt | (alu.io.sum(0) << 3.U).asUInt
   io.dcache.req.valid := !stall && (io.ctrl.st_type.orR || io.ctrl.ld_type.orR) && mem_dcache_en
   io.dcache.req.bits.addr := daddr
   io.dcache.req.bits.data := rs2 << woffset
@@ -214,10 +215,10 @@ import Const._
 
   // Load
   val loffset = (ew_reg.alu(1) << 4.U).asUInt | (ew_reg.alu(0) << 3.U).asUInt
-  val lshift = io.dcache.resp.bits.data >> loffset
+  val lshift = Mux(RegNext(mem_uart_en), io.uart.resp.bits.data, io.dcache.resp.bits.data) >> loffset   //FIXME - add uart
   val load = MuxLookup(
     ld_type,
-    io.dcache.resp.bits.data.zext,
+    io.dcache.resp.bits.data.zext,     //FIXME - how to do
     Seq(
       LD_LH -> lshift(15, 0).asSInt,
       LD_LB -> lshift(7, 0).asSInt,

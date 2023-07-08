@@ -24,7 +24,7 @@ object CSR {
   val timeh = 0xc81.U(12.W)
   val instreth = 0xc82.U(12.W)
 
-  // Supervisor-level CSR addrs
+  // Supervisor-level CSR addrs  //??? not find
   val cyclew = 0x900.U(12.W)
   val timew = 0x901.U(12.W)
   val instretw = 0x902.U(12.W)
@@ -34,13 +34,13 @@ object CSR {
 
   // Machine-level CSR addrs
   // Machine Information Registers
-  val mcpuid = 0xf00.U(12.W)
-  val mimpid = 0xf01.U(12.W)
-  val mhartid = 0xf10.U(12.W)
+  val mcpuid = 0xf00.U(12.W)    //FIXME - no csr
+  val mimpid = 0xf13.U(12.W)
+  val mhartid = 0xf14.U(12.W)
   // Machine Trap Setup
   val mstatus = 0x300.U(12.W)
-  val mtvec = 0x301.U(12.W)
-  val mtdeleg = 0x302.U(12.W)
+  val mtvec = 0x305.U(12.W)
+  val mtdeleg = 0x302.U(12.W)   //FIXME -  no scr medeleg
   val mie = 0x304.U(12.W)
   val mtimecmp = 0x321.U(12.W)
   // Machine Timers and Counters
@@ -50,7 +50,7 @@ object CSR {
   val mscratch = 0x340.U(12.W)
   val mepc = 0x341.U(12.W)
   val mcause = 0x342.U(12.W)
-  val mbadaddr = 0x343.U(12.W)
+  val mbadaddr = 0x343.U(12.W)   //NOTE - mtval
   val mip = 0x344.U(12.W)
   // Machine HITF ： Hardware Implementation-Defined Trap，map Standard read/write
   val mtohost = 0x780.U(12.W)
@@ -158,9 +158,10 @@ class CSR(val xlen: Int) extends Module {
   val XS = 0.U(2.W)
   val FS = 0.U(2.W)
   val SD = 0.U(1.W)
-  val mstatus = Cat(SD, 0.U((xlen - 23).W), VM, MPRV, XS, FS, PRV3, IE3, PRV2, IE2, PRV1, IE1, PRV, IE)
-  val mtvec = Const.PC_EVEC.U(xlen.W)         //NOTE - 0x100, Direct Mode
-  val mtdeleg = 0x0.U(xlen.W)
+  val mstatus = Cat(SD, 0.U((xlen - 23).W), VM, MPRV, XS, FS, PRV3, IE3, PRV2, IE2, PRV1, IE1, PRV, IE)  //FIXME - NO reg
+  // val mtvec = Const.PC_EVEC.U(xlen.W)         //NOTE - 0x100, Direct Mode
+  val mtvec = RegInit(Const.PC_EVEC.U(xlen.W))  // Declare mtvec as a Reg
+  val mtdeleg = 0x0.U(xlen.W)   //TODO - achieve me
 
   // interrupt registers
   val MTIP = RegInit(false.B)
@@ -186,7 +187,7 @@ class CSR(val xlen: Int) extends Module {
   val mcause = Reg(UInt(xlen.W))
   val mbadaddr = Reg(UInt(xlen.W))
 
-  val mtohost = RegInit(0.U(xlen.W))
+  val mtohost = RegInit(0.U(xlen.W))    // control sim
   val mfromhost = Reg(UInt(xlen.W))
   io.host.tohost := mtohost
   when(io.host.fromhost.valid) {
@@ -225,15 +226,16 @@ class CSR(val xlen: Int) extends Module {
     BitPat(CSR.mstatus) -> mstatus
   )
 
-  io.out := Lookup(csr_addr, 0.U, csrFile).asUInt
+  io.out := Lookup(csr_addr, 0.U, csrFile).asUInt      // note: csr value
 
-  val privValid = csr_addr(9, 8) <= PRV
+  val privValid = csr_addr(9, 8) <= PRV   //NOTE - Mstatus 中的 PRV位，也就是 0b11
   val privInst = io.cmd === CSR.P
   val isEcall = privInst && !csr_addr(0) && !csr_addr(8)
   val isEbreak = privInst && csr_addr(0) && !csr_addr(8)
   val isEret = privInst && !csr_addr(0) && csr_addr(8)
-  val csrValid = csrFile.map(_._1 === csr_addr).reduce(_ || _)
-  val csrRO = csr_addr(11, 10).andR || csr_addr === CSR.mtvec || csr_addr === CSR.mtdeleg
+  val csrValid = csrFile.map(_._1 === csr_addr).reduce(_ || _)  //NOTE - 判断csr地址是否有效！ scala用法
+  // val csrRO = csr_addr(11, 10).andR || csr_addr === CSR.mtvec || csr_addr === CSR.mtdeleg
+  val csrRO = csr_addr(11, 10).andR || csr_addr === CSR.mtdeleg
   val wen = io.cmd === CSR.W || io.cmd(1) && rs1_addr.orR
   val wdata = MuxLookup(
     io.cmd,
@@ -253,7 +255,7 @@ class CSR(val xlen: Int) extends Module {
   val saddrInvalid =
     MuxLookup(io.st_type, false.B, Seq(Control.ST_SW -> io.addr(1, 0).orR, Control.ST_SH -> io.addr(0)))
   io.expt := io.illegal || iaddrInvalid || laddrInvalid || saddrInvalid ||
-    io.cmd(1, 0).orR && (!csrValid || !privValid) || wen && csrRO ||
+    io.cmd(1, 0).orR && (!csrValid || !privValid) || wen && csrRO ||                // TODO - cmd???
     (privInst && !privValid) || isEcall || isEbreak
   io.evec := mtvec + (PRV << 6)
   io.epc := mepc
@@ -323,6 +325,7 @@ class CSR(val xlen: Int) extends Module {
         .elsewhen(csr_addr === CSR.cyclehw) { cycleh := wdata }
         .elsewhen(csr_addr === CSR.timehw) { timeh := wdata }
         .elsewhen(csr_addr === CSR.instrethw) { instreth := wdata }
+        .elsewhen(csr_addr === CSR.mtvec) { mtvec := wdata >> 2.U << 2.U}  // Direct
     }
   }
 }
