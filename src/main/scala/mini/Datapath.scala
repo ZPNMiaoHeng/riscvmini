@@ -28,6 +28,7 @@ class DatapathIO(xlen: Int) extends Bundle {
   val icache = Flipped(new CacheIO(xlen, xlen))
   val dcache = Flipped(new CacheIO(xlen, xlen))
   val uart = Flipped(new CacheIO(xlen, xlen))
+  // val clint = Flipped(new CacheIO(xlen, xlen)) //ANCHOR - test D$
   val ctrl = Flipped(new ControlSignals)
 }
 
@@ -99,8 +100,8 @@ class Datapath(val conf: CoreConfig) extends Module {
     pc + 4.U,
     IndexedSeq(
       stall -> pc,
-      csr.io.expt -> csr.io.evec,
-      (io.ctrl.pc_sel === PC_EPC) -> csr.io.epc,
+      csr.io.expt -> csr.io.evec,   // enter intr
+      (io.ctrl.pc_sel === PC_EPC) -> csr.io.epc, // exit intr
       ((io.ctrl.pc_sel === PC_ALU) || (brCond.io.taken)) -> (alu.io.sum >> 1.U << 1.U),
       (io.ctrl.pc_sel === PC_0) -> pc
     )
@@ -183,9 +184,20 @@ import Const._
   // io.uart.resp.valid :=  //FIXME - 
   // io.uart.resp.data :=  //FIXME - 
 
-  io.dcache.req.valid := !stall && (io.ctrl.st_type.orR || io.ctrl.ld_type.orR) && mem_dcache_en
+  // //* time
+  // io.clint.abort := false.B
+  // io.clint.req.valid := !stall && (io.ctrl.st_type.orR || io.ctrl.ld_type.orR) && mem_clint_en
+  // io.clint.req.bits.addr := daddr
+  // io.clint.req.bits.data := rs2 << woffset
+  // io.clint.req.bits.mask := MuxLookup(
+  //   Mux(stall, st_type, io.ctrl.st_type),
+  //   "b0000".U,
+  //   Seq(ST_SW -> "b1111".U, ST_SH -> ("b11".U << alu.io.sum(1, 0)), ST_SB -> ("b1".U << alu.io.sum(1, 0)))
+  // )
+
+  io.dcache.req.valid := !stall && (io.ctrl.st_type.orR || io.ctrl.ld_type.orR) && (mem_dcache_en || mem_clint_en )
   io.dcache.req.bits.addr := daddr
-  io.dcache.req.bits.data := rs2 << woffset
+  io.dcache.req.bits.data := Mux(mem_clint_en, csr.io.out_mtimecmp, rs2) << woffset
   io.dcache.req.bits.mask := MuxLookup(
     Mux(stall, st_type, io.ctrl.st_type),
     "b0000".U,
@@ -240,6 +252,8 @@ import Const._
   csr.io.ld_type := ld_type
   csr.io.st_type := st_type
   io.host <> csr.io.host
+  csr.io.in_valid := mem_clint_en && io.dcache.resp.valid
+  csr.io.in_mtimecmp := load
 
   // Regfile Write
   val regWrite =

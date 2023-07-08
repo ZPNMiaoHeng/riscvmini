@@ -116,6 +116,11 @@ class CSRIO(xlen: Int) extends Bundle {
   val expt = Output(Bool())
   val evec = Output(UInt(xlen.W))   //????
   val epc = Output(UInt(xlen.W))
+
+  val in_valid = Input(Bool())
+  val in_mtimecmp = Input(UInt(64.W))
+  val out_mtimecmp = Output(UInt(64.W))
+  val mTimerInterrupt = Output(Bool())
   // HTIF
   val host = new HostIO(xlen)
 }
@@ -276,15 +281,18 @@ class CSR(val xlen: Int) extends Module {
   val mtime = RegInit(0.U(64.W))
   mtime = timeh ## time
   val mtimecmp = RegInit(0,U(64.W))
-  //TODO - add mtimecmp write
+  when(io.in_valid) {
+    mtimecmp := io.in_mtimecmp
+  }
 
   val mTimerInterrupt = (mtime > mtimecmp) && MTIE && MIE
 
+  io.mTimerInterrupt := mTimerInterrupt
   io.expt := io.illegal || iaddrInvalid || laddrInvalid || saddrInvalid ||
     io.cmd(1, 0).orR && (!csrValid || !privValid) || wen && csrRO ||                // TODO - cmd???
-    (privInst && !privValid) || isEcall || isEbreak
-  io.evec := mtvec + (PRV << 6)   //FIXME - 
-  io.epc := mepc
+    (privInst && !privValid) || isEcall || isEbreak || mTimerInterrupt
+  io.evec := mtvec // FIXME - why use it  + (PRV << 6)   // mtvec + PRV ## 00_0000
+  io.epc := mepc   //NOTE - mret：exit pc
 
   // Counters
   time := time + 1.U
