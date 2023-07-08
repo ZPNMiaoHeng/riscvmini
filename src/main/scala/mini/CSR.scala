@@ -96,6 +96,8 @@ object Cause {
   val LoadAddrMisaligned = 0x4.U
   val StoreAddrMisaligned = 0x6.U
   val Ecall = 0x8.U
+
+  val MachineTimerInterrupt = 0x17.U 
 }
 
 class CSRIO(xlen: Int) extends Bundle {
@@ -158,7 +160,7 @@ class CSR(val xlen: Int) extends Module {
   val XS = 0.U(2.W)
   val FS = 0.U(2.W)
   val SD = 0.U(1.W)
-  val mstatus = Cat(SD, 0.U((xlen - 23).W), VM, MPRV, XS, FS, PRV3, IE3, PRV2, IE2, PRV1, IE1, PRV, IE)  //FIXME - NO reg
+  val mstatus = Cat(SD, 0.U((xlen - 23).W), VM, MPRV, XS, FS, PRV3, IE3, PRV2, IE2, PRV1, IE1, PRV, IE)  //TODO - Clint - MIE
   // val mtvec = Const.PC_EVEC.U(xlen.W)         //NOTE - 0x100, Direct Mode
   val mtvec = RegInit(Const.PC_EVEC.U(xlen.W))  // Declare mtvec as a Reg
   val mtdeleg = 0x0.U(xlen.W)   //TODO - achieve me
@@ -177,7 +179,7 @@ class CSR(val xlen: Int) extends Module {
   val HSIE = false.B
   val SSIE = false.B
   val mip = Cat(0.U((xlen - 8).W), MTIP, HTIP, STIP, false.B, MSIP, HSIP, SSIP, false.B)
-  val mie = Cat(0.U((xlen - 8).W), MTIE, HTIE, STIE, false.B, MSIE, HSIE, SSIE, false.B)
+  val mie = Cat(0.U((xlen - 8).W), MTIE, HTIE, STIE, false.B, MSIE, HSIE, SSIE, false.B)   // TODO - Clint:MTIE
 
   val mtimecmp = Reg(UInt(xlen.W))
 
@@ -254,6 +256,9 @@ class CSR(val xlen: Int) extends Module {
   )
   val saddrInvalid =
     MuxLookup(io.st_type, false.B, Seq(Control.ST_SW -> io.addr(1, 0).orR, Control.ST_SH -> io.addr(0)))
+
+  val mTimerInterrupt = mtime > mtimecmp   // TODO - Clint
+
   io.expt := io.illegal || iaddrInvalid || laddrInvalid || saddrInvalid ||
     io.cmd(1, 0).orR && (!csrValid || !privValid) || wen && csrRO ||                // TODO - cmd???
     (privInst && !privValid) || isEcall || isEbreak
@@ -281,7 +286,11 @@ class CSR(val xlen: Int) extends Module {
           Mux(
             saddrInvalid,
             Cause.StoreAddrMisaligned,
-            Mux(isEcall, Cause.Ecall + PRV, Mux(isEbreak, Cause.Breakpoint, Cause.IllegalInst))
+            Mux(
+              mTimerInterrupt,
+              Cause.MachineTimerInterrupt,
+              Mux(isEcall, Cause.Ecall + PRV, Mux(isEbreak, Cause.Breakpoint, Cause.IllegalInst))
+            )
           )
         )
       )

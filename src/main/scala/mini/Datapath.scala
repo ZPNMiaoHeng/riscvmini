@@ -157,17 +157,18 @@ class Datapath(val conf: CoreConfig) extends Module {
   // D$ access
 import Const._
 //  val daddr = Mux(stall, ew_reg.alu, alu.io.sum) >> 2.U << 2.U
- val daddrT = Mux(stall, ew_reg.alu, alu.io.sum)
+  val daddrT = Mux(stall, ew_reg.alu, alu.io.sum)
 //  val uart_en = ((daddrT & UART_MASK.U(conf.xlen.W)) === UART_BASE.U)
 //  mem_en := ((daddrT & FLASH_MASK.U(conf.xlen.W)) === FLASH_BASE.U) || ((daddrT & MEM_MASK.U(conf.xlen.W)) === MEM_BASE.U)
- 
- val mem_uart_en = (daddrT(31, 12) === 0x1000_0.U)
- val mem_dcache_en = (daddrT(31, 28) === 0x3.U) || (daddrT(31, 31) === 0x1.U)
 
- val daddr = Fill(32, mem_dcache_en.asUInt()) & (daddrT >> 2.U << 2.U)
- val other_mem = !mem_uart_en && !mem_dcache_en          //SECTION - other memery add assert
+  val mem_clint_en = (daddrT(31, 16) === 0x0200.U)  // Clint:0x0200_0000~0x0200_FFFF
+  val mem_uart_en = (daddrT(31, 12) === 0x1000_0.U) // UART:0x1000_0000~0x1000_0FFF
+  val mem_dcache_en = (daddrT(31, 28) === 0x3.U) || (daddrT(31, 31) === 0x1.U) // MEM:0x8000_0000~0xFBFF_FFFF SDRAM:0xFC00_0000~0xFFFF_FFFF
 
- val woffset = (alu.io.sum(1) << 4.U).asUInt | (alu.io.sum(0) << 3.U).asUInt
+  val daddr = Fill(32, mem_dcache_en.asUInt()) & (daddrT >> 2.U << 2.U)
+//  val other_mem = !mem_uart_en && !mem_dcache_en          //SECTION - other memery add assert
+
+  val woffset = (alu.io.sum(1) << 4.U).asUInt | (alu.io.sum(0) << 3.U).asUInt
 //* uart io : no aglin
   io.uart.abort := false.B
   // io.uart.req.valid := !stall && (Mux((io.ctrl.st_type.orR || io.ctrl.ld_type.orR), mem_uart_en, if_uart_en)
