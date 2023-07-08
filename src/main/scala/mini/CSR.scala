@@ -97,7 +97,7 @@ object Cause {
   val StoreAddrMisaligned = 0x6.U
   val Ecall = 0x8.U
 
-  val MachineTimerInterrupt = 0x17.U 
+  val MachineTimerInterrupt = 0x8000_0007.U 
 }
 
 class CSRIO(xlen: Int) extends Bundle {
@@ -114,7 +114,7 @@ class CSRIO(xlen: Int) extends Bundle {
   val ld_type = Input(UInt(3.W))
   val pc_check = Input(Bool())
   val expt = Output(Bool())
-  val evec = Output(UInt(xlen.W))
+  val evec = Output(UInt(xlen.W))   //????
   val epc = Output(UInt(xlen.W))
   // HTIF
   val host = new HostIO(xlen)
@@ -143,27 +143,43 @@ class CSR(val xlen: Int) extends Module {
   val mimpid = 0.U(xlen.W) // not implemented
   val mhartid = 0.U(xlen.W) // only one hart
 
-  // interrupt enable stack
-  val PRV = RegInit(CSR.PRV_M)
-  val PRV1 = RegInit(CSR.PRV_M)
-  val PRV2 = 0.U(2.W)
-  val PRV3 = 0.U(2.W)
-  val IE = RegInit(false.B)
-  val IE1 = RegInit(false.B)
-  val IE2 = false.B
-  val IE3 = false.B
-  // virtualization management field
-  val VM = 0.U(5.W)
-  // memory privilege
-  val MPRV = false.B
-  // extention context status
+  // // interrupt enable stack
+  // val PRV = RegInit(CSR.PRV_M)
+  // val PRV1 = RegInit(CSR.PRV_M)
+  // val PRV2 = 0.U(2.W)
+  // val PRV3 = 0.U(2.W)
+  // val IE = RegInit(false.B)      // MIE
+  // val IE1 = RegInit(false.B)     // MPIE
+  // val IE2 = false.B
+  // val IE3 = false.B
+  // // virtualization management field
+  // val VM = 0.U(5.W)
+  // // memory privilege
+  // val MPRV = false.B
+  // // extention context status
+  // val XS = 0.U(2.W)
+  // val FS = 0.U(2.W)
+  // val SD = 0.U(1.W)
+  // val mstatus = Cat(SD, 0.U((xlen - 23).W), VM, MPRV, XS, FS, PRV3, IE3, PRV2, IE2, PRV1, IE1, PRV, IE)
+
+  val MIE = RegInit(false.B)   //TODO - 启用中断
+  val MPIE = RegInit(false.B)   //TODO - trap 之前的MIE
+  val MPP = RegInit(CSR.PRV_M)  //TODO - tarp 之前的特权模式
+  val WPRI = 0.U(1.W)
+  val SIE = 0.U(1.W)
+  val SPIE = 0.U(1.W)
+  val UBE = 0.U(1.W)
+  val SPP = 0.U(1.W)
+  val VS = 0.U(2.W)
   val XS = 0.U(2.W)
   val FS = 0.U(2.W)
   val SD = 0.U(1.W)
-  val mstatus = Cat(SD, 0.U((xlen - 23).W), VM, MPRV, XS, FS, PRV3, IE3, PRV2, IE2, PRV1, IE1, PRV, IE)  //TODO - Clint - MIE
+
+  val mstatus = Cat(SD, 0.U((xlen - 23).W), VM, MPRV, XS, FS, MPP, VS ,SPP, MPIE, UBE, SPIE, WPRI, MIE, WPRI, SIE, WPRI)
+  
   // val mtvec = Const.PC_EVEC.U(xlen.W)         //NOTE - 0x100, Direct Mode
   val mtvec = RegInit(Const.PC_EVEC.U(xlen.W))  // Declare mtvec as a Reg
-  val mtdeleg = 0x0.U(xlen.W)   //TODO - achieve me
+  val mtdeleg = 0x0.U(xlen.W)
 
   // interrupt registers
   val MTIP = RegInit(false.B)
@@ -175,11 +191,11 @@ class CSR(val xlen: Int) extends Module {
   val MSIP = RegInit(false.B)
   val HSIP = false.B
   val SSIP = false.B
-  val MSIE = RegInit(false.B)
+  val MSIE = RegInit(false.B)   //NOTE - S mode interrupt
   val HSIE = false.B
   val SSIE = false.B
   val mip = Cat(0.U((xlen - 8).W), MTIP, HTIP, STIP, false.B, MSIP, HSIP, SSIP, false.B)
-  val mie = Cat(0.U((xlen - 8).W), MTIE, HTIE, STIE, false.B, MSIE, HSIE, SSIE, false.B)   // TODO - Clint:MTIE
+  val mie = Cat(0.U((xlen - 8).W), MTIE, HTIE, STIE, false.B, MSIE, HSIE, SSIE, false.B)
 
   val mtimecmp = Reg(UInt(xlen.W))
 
@@ -257,12 +273,17 @@ class CSR(val xlen: Int) extends Module {
   val saddrInvalid =
     MuxLookup(io.st_type, false.B, Seq(Control.ST_SW -> io.addr(1, 0).orR, Control.ST_SH -> io.addr(0)))
 
-  val mTimerInterrupt = mtime > mtimecmp   // TODO - Clint
+  val mtime = RegInit(0.U(64.W))
+  mtime = timeh ## time
+  val mtimecmp = RegInit(0,U(64.W))
+  //TODO - add mtimecmp write
+
+  val mTimerInterrupt = (mtime > mtimecmp) && MTIE && MIE
 
   io.expt := io.illegal || iaddrInvalid || laddrInvalid || saddrInvalid ||
     io.cmd(1, 0).orR && (!csrValid || !privValid) || wen && csrRO ||                // TODO - cmd???
     (privInst && !privValid) || isEcall || isEbreak
-  io.evec := mtvec + (PRV << 6)
+  io.evec := mtvec + (PRV << 6)   //FIXME - 
   io.epc := mepc
 
   // Counters
@@ -289,23 +310,31 @@ class CSR(val xlen: Int) extends Module {
             Mux(
               mTimerInterrupt,
               Cause.MachineTimerInterrupt,
-              Mux(isEcall, Cause.Ecall + PRV, Mux(isEbreak, Cause.Breakpoint, Cause.IllegalInst))
+              Mux(isEcall, Cause.Ecall + PRV, Mux(isEbreak, Cause.Breakpoint, Cause.IllegalInst))   // Cause.Ecall + PRV = 8 + U(0)/M(3)
             )
           )
         )
       )
-      PRV := CSR.PRV_M
-      IE := false.B
-      PRV1 := PRV
-      IE1 := IE
+      MPIE := MIE
+      MIE := false.B
+      MPP := CSR.PRV_M
+
+      // PRV := CSR.PRV_M
+      // IE := false.B
+      // PRV1 := PRV
+      // IE1 := IE
       when(iaddrInvalid || laddrInvalid || saddrInvalid) { mbadaddr := io.addr }
     }.elsewhen(isEret) {
-      PRV := PRV1
-      IE := IE1
-      PRV1 := CSR.PRV_U
-      IE1 := true.B
+      MIE := MPIE
+      MPIE := true.B
+      MPP := CSR.PRV_U
+
+      // PRV := PRV1
+      // IE := IE1
+      // PRV1 := CSR.PRV_U
+      // IE1 := true.B
     }.elsewhen(wen) {
-      when(csr_addr === CSR.mstatus) {
+      when(csr_addr === CSR.mstatus) {  //FIXME - 
         PRV1 := wdata(5, 4)
         IE1 := wdata(3)
         PRV := wdata(2, 1)

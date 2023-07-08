@@ -7,44 +7,12 @@ import chisel3.experimental.ChiselEnum
 import chisel3.util._
 import junctions._
 
-// class CacheReq(addrWidth: Int, dataWidth: Int) extends Bundle {
-//   val addr = UInt(addrWidth.W)
-//   val data = UInt(dataWidth.W)
-//   val mask = UInt((dataWidth / 8).W)
-// }
-
-// class CacheResp(dataWidth: Int) extends Bundle {
-//   val data = UInt(dataWidth.W)
-// }
-
-// class CacheIO(addrWidth: Int, dataWidth: Int) extends Bundle {
-//   val abort = Input(Bool())
-//   val req = Flipped(Valid(new CacheReq(addrWidth, dataWidth)))    //NOTE(MH):Valid
-//   val resp = Valid(new CacheResp(dataWidth))
-// }
-
-// class CacheModuleIO(nastiParams: NastiBundleParameters, addrWidth: Int, dataWidth: Int) extends Bundle {
-//   val cpu = new CacheIO(addrWidth, dataWidth)
-//   val nasti = new NastiBundle(nastiParams)
-// }
-
-// case class CacheConfig(nWays: Int, nSets: Int, blockBytes: Int)
-
 class UartModuleIO(nastiParams: NastiBundleParameters, addrWidth: Int, dataWidth: Int) extends Bundle {
-  val cpu = new CacheIO(addrWidth, dataWidth)
-  val nasti = new NastiBundle(nastiParams)
+    val cpu = new CacheIO(addrWidth, dataWidth)
+    val nasti = new NastiBundle(nastiParams)
 }
-
-// object UartRState extends ChiselEnum {
-//   val sIdle, s, sWriteCache, sWriteBack, sWriteAck, sRefillReady, sRefill = Value
-// }
-
-// object UartWState extends ChiselEnum {
-//   val sIdle, sReadCache, sWriteCache, sWriteBack, sWriteAck, sRefillReady, sRefill = Value
-// }
-
 object UartState extends ChiselEnum {
-  val sIdle, sReadAddr, sReadData, sWriteAddr, sWriteData, sWriteBack = Value
+    val sIdle, sReadAddr, sReadData, sWriteAddr, sWriteData, sWriteBack = Value
 }
 
 // normal transform
