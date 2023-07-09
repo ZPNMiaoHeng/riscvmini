@@ -97,7 +97,7 @@ object Cause {
   val StoreAddrMisaligned = 0x6.U
   val Ecall = 0x8.U
 
-  val MachineTimerInterrupt = 0x8000_0007.U 
+  val MachineTimerInterrupt = 0x7.U   //FIXME - 0x8000_00007
 }
 
 class CSRIO(xlen: Int) extends Bundle {
@@ -179,6 +179,8 @@ class CSR(val xlen: Int) extends Module {
   val XS = 0.U(2.W)
   val FS = 0.U(2.W)
   val SD = 0.U(1.W)
+  val VM = 0.U(5.W)
+  val MPRV = false.B
 
   val mstatus = Cat(SD, 0.U((xlen - 23).W), VM, MPRV, XS, FS, MPP, VS ,SPP, MPIE, UBE, SPIE, WPRI, MIE, WPRI, SIE, WPRI)
   
@@ -251,7 +253,8 @@ class CSR(val xlen: Int) extends Module {
 
   io.out := Lookup(csr_addr, 0.U, csrFile).asUInt      // note: csr value
 
-  val privValid = csr_addr(9, 8) <= PRV   //NOTE - Mstatus 中的 PRV位，也就是 0b11
+  // val privValid = csr_addr(9, 8) <= PRV   //判断csr_addr的9到8位是否小于等于PRV。其中，PRV表示Mstatus寄存器中的特权位
+  val privValid = csr_addr(9, 8) <= MPP
   val privInst = io.cmd === CSR.P
   val isEcall = privInst && !csr_addr(0) && !csr_addr(8)
   val isEbreak = privInst && csr_addr(0) && !csr_addr(8)
@@ -279,8 +282,8 @@ class CSR(val xlen: Int) extends Module {
     MuxLookup(io.st_type, false.B, Seq(Control.ST_SW -> io.addr(1, 0).orR, Control.ST_SH -> io.addr(0)))
 
   val mtime = RegInit(0.U(64.W))
-  mtime = timeh ## time
-  val mtimecmp = RegInit(0,U(64.W))
+  mtime := timeh ## time
+  // val mtimecmp = RegInit(0.U(64.W))
   when(io.in_valid) {
     mtimecmp := io.in_mtimecmp
   }
@@ -288,6 +291,7 @@ class CSR(val xlen: Int) extends Module {
   val mTimerInterrupt = (mtime > mtimecmp) && MTIE && MIE
 
   io.mTimerInterrupt := mTimerInterrupt
+  io.out_mtimecmp := mtimecmp
   io.expt := io.illegal || iaddrInvalid || laddrInvalid || saddrInvalid ||
     io.cmd(1, 0).orR && (!csrValid || !privValid) || wen && csrRO ||                // TODO - cmd???
     (privInst && !privValid) || isEcall || isEbreak || mTimerInterrupt
@@ -317,8 +321,8 @@ class CSR(val xlen: Int) extends Module {
             Cause.StoreAddrMisaligned,
             Mux(
               mTimerInterrupt,
-              Cause.MachineTimerInterrupt,
-              Mux(isEcall, Cause.Ecall + PRV, Mux(isEbreak, Cause.Breakpoint, Cause.IllegalInst))   // Cause.Ecall + PRV = 8 + U(0)/M(3)
+              (BigInt(1) << (xlen - 1)).U | Cause.MachineTimerInterrupt, // mcause m intr = 0x8000_0007
+              Mux(isEcall, Cause.Ecall + MPP, Mux(isEbreak, Cause.Breakpoint, Cause.IllegalInst))   // Cause.Ecall + PRV = 8 + U(0)/M(3)
             )
           )
         )
@@ -343,10 +347,13 @@ class CSR(val xlen: Int) extends Module {
       // IE1 := true.B
     }.elsewhen(wen) {
       when(csr_addr === CSR.mstatus) {  //FIXME - 
-        PRV1 := wdata(5, 4)
-        IE1 := wdata(3)
-        PRV := wdata(2, 1)
-        IE := wdata(0)
+        // PRV1 := wdata(5, 4)
+        // IE1 := wdata(3)
+        // PRV := wdata(2, 1)
+        // IE := wdata(0)
+        MIE := wdata(3)
+        MPIE := wdata(7)
+        MPP := wdata(12, 11)
       }
         .elsewhen(csr_addr === CSR.mip) {
           MTIP := wdata(7)

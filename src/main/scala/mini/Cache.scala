@@ -19,7 +19,7 @@ class CacheResp(dataWidth: Int) extends Bundle {
 
 class CacheIO(addrWidth: Int, dataWidth: Int) extends Bundle {
   val abort = Input(Bool())
-  val req = Flipped(Valid(new CacheReq(addrWidth, dataWidth)))    //NOTE(MH):Valid
+  val req = Flipped(Valid(new CacheReq(addrWidth, dataWidth)))    //NOTE - Valid
   val resp = Valid(new CacheResp(dataWidth))
 }
 
@@ -30,7 +30,7 @@ class CacheModuleIO(nastiParams: NastiBundleParameters, addrWidth: Int, dataWidt
 
 case class CacheConfig(nWays: Int, nSets: Int, blockBytes: Int)
 
-class MetaData(tagLength: Int) extends Bundle {                        //NOTE - 通过类实现，在后面直接调用
+class MetaData(tagLength: Int) extends Bundle {                        //NOTE - parameter config tag size
   val tag = UInt(tagLength.W)
 }
 
@@ -38,7 +38,7 @@ object CacheState extends ChiselEnum {
   val sIdle, sReadCache, sWriteCache, sWriteBack, sWriteAck, sRefillReady, sRefill = Value
 }
 
-class Cache(val p: CacheConfig, val nasti: NastiBundleParameters, val xlen: Int) extends Module {
+class Cache(val p: CacheConfig, val nasti: NastiBundleParameters, val xlen: Int) extends Module {   // CacheConfig / NastiBundleParameters : case class
   // local parameters
   val nSets = p.nSets                        // 256
   val bBytes = p.blockBytes                  // 16
@@ -57,7 +57,7 @@ class Cache(val p: CacheConfig, val nasti: NastiBundleParameters, val xlen: Int)
   import CacheState._
   val state = RegInit(sIdle)
   // memory
-  val v = RegInit(0.U(nSets.W))
+  val v = RegInit(0.U(nSets.W))  //NOTE - 256 reg
   val d = RegInit(0.U(nSets.W))
   val metaMem = SyncReadMem(nSets, new MetaData(tlen))                           // 256 * 20 - tag
   val dataMem = Seq.fill(nWords)(SyncReadMem(nSets, Vec(wBytes, UInt(8.W))))     // 4 * 256 * 4 * 8 ： cache按照字存储

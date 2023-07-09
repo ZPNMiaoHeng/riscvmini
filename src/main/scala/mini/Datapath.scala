@@ -253,7 +253,7 @@ import Const._
   csr.io.st_type := st_type
   io.host <> csr.io.host
   csr.io.in_valid := mem_clint_en && io.dcache.resp.valid
-  csr.io.in_mtimecmp := load
+  csr.io.in_mtimecmp := io.dcache.resp.bits.data //load
 
   // Regfile Write
   val regWrite =
