@@ -86,7 +86,13 @@ class Uart(val nasti: NastiBundleParameters, val xlen: Int) extends Module {
         }
         is(sReadData) {
             when(io.nasti.r.fire) {
-                state := sIdle
+                when(io.cpu.req.valid) {
+                    reg_data := io.cpu.req.bits.data
+                    reg_mask := io.cpu.req.bits.mask
+                    state := Mux(io.cpu.req.bits.mask.orR, sWriteAddr, sReadAddr)
+                } .otherwise {
+                    state := sIdle
+                }
             }
         }
 
