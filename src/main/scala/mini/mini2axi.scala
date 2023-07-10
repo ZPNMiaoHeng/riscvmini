@@ -7,21 +7,21 @@ import chisel3.experimental.ChiselEnum
 import chisel3.util._
 import junctions._
 
-class UartModuleIO(nastiParams: NastiBundleParameters, addrWidth: Int, dataWidth: Int) extends Bundle {
+class Mini2axiModuleIO(nastiParams: NastiBundleParameters, addrWidth: Int, dataWidth: Int) extends Bundle {
     val cpu = new CacheIO(addrWidth, dataWidth)
     val nasti = new NastiBundle(nastiParams)
 }
-object UartState extends ChiselEnum {
+object Mini2axiState extends ChiselEnum {
     val sIdle, sReadAddr, sReadData, sWriteAddr, sWriteData, sWriteBack = Value
 }
 
 // normal transform
-class Uart(val nasti: NastiBundleParameters, val xlen: Int) extends Module {
+class Mini2axi(val nasti: NastiBundleParameters, val xlen: Int) extends Module {
 
     val io = IO(new UartModuleIO(nasti, addrWidth = xlen, dataWidth = xlen))
 
     // uart state
-    import UartState._
+    import Mini2axiState._
     val state = RegInit(sIdle)
 
     val is_idle = state === sIdle
