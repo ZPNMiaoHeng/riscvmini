@@ -38,7 +38,7 @@ class MemArbiter(params: NastiBundleParameters) extends Module {
   )
 
   io.nasti.aw.valid := (io.daxi2apb.aw.valid || io.dcache.aw.valid || io.uart.aw.valid) && state === sIdle
-  io.daxi2apb.aw.ready := io,nasti.aw.ready && state === sIdle
+  io.daxi2apb.aw.ready := io.nasti.aw.ready && state === sIdle
   io.dcache.aw.ready := io.nasti.aw.ready && state === sIdle
   io.uart.aw.ready := io.nasti.aw.ready && state === sIdle
   io.iaxi2apb.aw := DontCare
@@ -49,7 +49,7 @@ class MemArbiter(params: NastiBundleParameters) extends Module {
   io.nasti.w.bits := NastiWriteDataBundle(params)(
     // Mux(io.dcache.w.valid, io.dcache.w.bits.id,   io.uart.w.bits.id),
          Mux(io.daxi2apb.w.valid, io.daxi2apb.w.bits.data, Mux(io.dcache.w.valid, io.dcache.w.bits.data, io.uart.w.bits.data)),
-    Some(Mux(io.daxi2apb.w.valid, io.daxi2apb.w.bits.strb, Mux(io.dcache.w.valid, io.dcache.w.bits.strb, io.uart.w.bits.strb))),
+    Some(Mux(io.daxi2apb.w.valid, io.daxi2apb.w.bits.strb , Mux(io.dcache.w.valid, io.dcache.w.bits.strb, io.uart.w.bits.strb))),
          Mux(io.daxi2apb.w.valid, io.daxi2apb.w.bits.last, Mux(io.dcache.w.valid, io.dcache.w.bits.last, io.uart.w.bits.last))
   )
 
@@ -57,7 +57,7 @@ class MemArbiter(params: NastiBundleParameters) extends Module {
   io.daxi2apb.w.ready := io.nasti.w.ready && state === sDApbWrite
   io.dcache.w.ready := io.nasti.w.ready && state === sDCacheWrite
   io.uart.w.ready := io.nasti.w.ready && state === sUartWrite
-  io.daxi2apb.w := DontCare
+  io.iaxi2apb.w := DontCare
   io.icache.w := DontCare
 
   // Write Ack
@@ -84,9 +84,11 @@ class MemArbiter(params: NastiBundleParameters) extends Module {
   io.daxi2apb.ar.ready := io.nasti.ar.ready && !io.nasti.aw.valid && state === sIdle
   io.iaxi2apb.ar.ready := io.daxi2apb.ar.ready && !io.daxi2apb.ar.valid
   io.dcache.ar.ready := io.iaxi2apb.ar.ready && !io.iaxi2apb.ar.valid
-  // io.dcache.ar.ready := io.nasti.ar.ready && !io.nasti.aw.valid && state === sIdle
   io.icache.ar.ready := io.dcache.ar.ready && !io.dcache.ar.valid
   io.uart.ar.ready := io.icache.ar.ready && !io.icache.ar.valid
+
+  // io.dcache.ar.ready := io.nasti.ar.ready && !io.nasti.aw.valid && state === sIdle
+  // io.icache.ar.ready := io.dcache.ar.ready && !io.dcache.ar.valid
 
   // Read Data
   io.iaxi2apb.r.bits := io.nasti.r.bits
@@ -138,7 +140,7 @@ class MemArbiter(params: NastiBundleParameters) extends Module {
       }
     }
     is(sDApbWrite) {
-      when(io.dcache.w.fire && io.dcache.w.bits.last) {
+      when(io.daxi2apb.w.fire && io.daxi2apb.w.bits.last) {
         state := sDApbAck
       }
     }
@@ -201,7 +203,7 @@ class Tile(val coreParams: CoreConfig, val nastiParams: NastiBundleParameters, v
   val io = IO(new TileIO(coreParams.xlen, nastiParams))
   val core = Module(new Core(coreParams))
   val icache = Module(new Cache(cacheParams, nastiParams, coreParams.xlen))
-  val dcache = Module(new Cache(cacheParams, nastiParams, coreParams.xlen))\
+  val dcache = Module(new Cache(cacheParams, nastiParams, coreParams.xlen))
   val iaxi2apb = Module(new Mini2axi(nastiParams, coreParams.xlen))
   val daxi2apb = Module(new Mini2axi(nastiParams, coreParams.xlen))
   val uart = Module(new Mini2axi(nastiParams, coreParams.xlen))

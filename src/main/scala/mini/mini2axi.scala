@@ -18,7 +18,7 @@ object Mini2axiState extends ChiselEnum {
 // normal transform
 class Mini2axi(val nasti: NastiBundleParameters, val xlen: Int) extends Module {
 
-    val io = IO(new UartModuleIO(nasti, addrWidth = xlen, dataWidth = xlen))
+    val io = IO(new Mini2axiModuleIO(nasti, addrWidth = xlen, dataWidth = xlen))
 
     // uart state
     import Mini2axiState._
@@ -62,8 +62,8 @@ class Mini2axi(val nasti: NastiBundleParameters, val xlen: Int) extends Module {
         // 0.U
     // )
     io.nasti.w.bits := NastiWriteDataBundle(nasti)(
-        reg_data,
-        Some(reg_mask)//,
+        reg_data ## reg_data,
+        Some(Mux(io.nasti.aw.bits.addr(2, 2) === 1.U, reg_mask << 4.U, reg_mask))    //FIXME - apb write data mask angin 
         //0.U
     )
     io.nasti.w.valid := false.B

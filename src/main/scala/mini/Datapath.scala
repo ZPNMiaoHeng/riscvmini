@@ -182,7 +182,7 @@ import Const._
   val daddr = Fill(32, dcache_en.asUInt()) & (daddrT >> 2.U << 2.U)  // cache align
   val woffset = (alu.io.sum(1) << 4.U).asUInt | (alu.io.sum(0) << 3.U).asUInt
 
-//* daxi2apb 
+//* uart
   io.uart.abort := false.B
   io.uart.req.valid := !stall && uart_en
   io.uart.req.bits.addr := daddrT
