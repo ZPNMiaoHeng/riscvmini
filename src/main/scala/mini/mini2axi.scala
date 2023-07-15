@@ -36,7 +36,8 @@ class Mini2axi(val nasti: NastiBundleParameters, val xlen: Int) extends Module {
     val reg_data = RegInit(0.U(xlen.W))
 
       // Read Mux
-    io.cpu.resp.bits.data := Mux(io.cpu.req.bits.mask.orR,  Instructions.NOP, io.nasti.r.bits.data)
+    io.cpu.resp.bits.data := io.nasti.r.bits.data
+    // io.cpu.resp.bits.data := Mux(io.cpu.req.bits.mask.orR,  Instructions.NOP, io.nasti.r.bits.data)
     // io.cpu.resp.bits.data := Fill(32, !io.cpu.req.bits.mask.orR) & io.nasti.r.bits.data
     io.cpu.resp.valid := is_idle || io.nasti.r.fire || io.nasti.b.fire 
     // io.cpu.resp.valid := io.nasti.r.fire || io.nasti.b.fire

@@ -137,7 +137,8 @@ class Datapath(val conf: CoreConfig) extends Module {
   io.iaxi2apb.req.bits.addr := next_pc
   io.iaxi2apb.req.bits.data := 0.U
   io.iaxi2apb.req.bits.mask := 0.U
-  io.iaxi2apb.req.valid := !stall && flash_mode && !uart_en
+  // io.iaxi2apb.req.valid := !stall && flash_mode && !uart_en
+  io.iaxi2apb.req.valid := !stall // && !io.daxi2apb.req.valid
   io.iaxi2apb.abort := false.B
 
   // Pipelining
@@ -169,7 +170,7 @@ class Datapath(val conf: CoreConfig) extends Module {
   val rs2 = Mux(wb_sel === WB_ALU && rs2hazard, ew_reg.alu, regFile.io.rdata2)
 
   // ALU operations
-  alu.io.A := Mux(io.ctrl.A_sel === A_RS1, rs1, fe_reg.pc)
+  alu.io.A := Mux(io.ctrl.A_sel === A_RS1, rs1, fe_reg.pc)        // FIXME - 数据冲突
   alu.io.B := Mux(io.ctrl.B_sel === B_RS2, rs2, immGen.io.out)
   alu.io.alu_op := io.ctrl.alu_op
 
@@ -183,27 +184,29 @@ import Const._
   // val daddrT = Mux(stall, ew_reg.alu, alu.io.sum)
 
   // val clint_en = (daddrT(31, 16) === 0x0200.U)                                  // Clint:0x0200_0000~0x0200_FFFF
-  // val uart_en = (daddrT(31, 12) === 0x1000_0.U)                                 // UART:0x1000_0000~0x1000_0FFF)
-  val daxi2apb_en = flash_mode && (io.ctrl.st_type.orR || io.ctrl.ld_type.orR) && (daddrT(31, 31) === 0x1.U) 
+  val uart_en = (daddrT(31, 12) === 0x1000_0.U)                                 // UART:0x1000_0000~0x1000_0FFF)
+
+  // val daxi2apb_en = flash_mode && (io.ctrl.st_type.orR || io.ctrl.ld_type.orR) && (daddrT(31, 31) === 0x1.U) 
   val dcache_en = mem_mode && (io.ctrl.st_type.orR || io.ctrl.ld_type.orR) && (daddrT(31, 31) === 0x1.U)                                     // MEM:0x8000_0000~0xFBFF_FFFF / SDRAM:0xFC00_0000~0xFFFF_FFFF
 
   val daddr = Fill(32, dcache_en.asUInt()) & (daddrT >> 2.U << 2.U)  // cache align
   val woffset = (alu.io.sum(1) << 4.U).asUInt | (alu.io.sum(0) << 3.U).asUInt
 
 //* uart
-  io.uart.abort := false.B
-  io.uart.req.valid := !stall && uart_en
-  io.uart.req.bits.addr := daddrT
-  io.uart.req.bits.data := rs2 << woffset
-  io.uart.req.bits.mask := MuxLookup(       //FIXME - notice modidy
-    Mux(stall, st_type, io.ctrl.st_type),
-    "b0000".U,
-    Seq(ST_SW -> "b1111".U, ST_SH -> ("b11".U << alu.io.sum(1, 0)), ST_SB -> ("b1".U << alu.io.sum(1, 0)))
-  )
+  io.uart := DontCare
+  // io.uart.abort := false.B
+  // io.uart.req.valid := !stall && uart_en
+  // io.uart.req.bits.addr := daddrT
+  // io.uart.req.bits.data := rs2 << woffset
+  // io.uart.req.bits.mask := MuxLookup(       //FIXME - notice modidy
+  //   Mux(stall, st_type, io.ctrl.st_type),
+  //   "b0000".U,
+  //   Seq(ST_SW -> "b1111".U, ST_SH -> ("b11".U << alu.io.sum(1, 0)), ST_SB -> ("b1".U << alu.io.sum(1, 0)))
+  // )
 
 //* daxi2apb 
   io.daxi2apb.abort := false.B
-  io.daxi2apb.req.valid := !stall && daxi2apb_en
+  io.daxi2apb.req.valid := !stall && (io.ctrl.st_type.orR || io.ctrl.ld_type.orR)   // && daxi2apb_en
   io.daxi2apb.req.bits.addr := daddrT
   io.daxi2apb.req.bits.data := rs2 << woffset
   io.daxi2apb.req.bits.mask := MuxLookup(       //FIXME - notice modidy
@@ -257,9 +260,14 @@ import Const._
 
   // Load
   val loffset = (ew_reg.alu(1) << 4.U).asUInt | (ew_reg.alu(0) << 3.U).asUInt
-  val lshift = Mux(RegNext(daxi2apb_en), io.daxi2apb.resp.bits.data,
-                 Mux(RegNext(uart_en), io.uart.resp.bits.data, 
-                    io.dcache.resp.bits.data)) >> loffset
+  // val lshift = Mux(RegNext(daxi2apb_en), io.daxi2apb.resp.bits.data,
+  //                Mux(RegNext(uart_en), io.uart.resp.bits.data, 
+  //                   io.dcache.resp.bits.data)) >> loffset
+  // val lshift_reg = RegInit(0.U(xlen.W))
+  // when 
+
+  val lshift = io.daxi2apb.resp.bits.data >> loffset
+
   val load = MuxLookup(
     ld_type,
     io.dcache.resp.bits.data.zext,
