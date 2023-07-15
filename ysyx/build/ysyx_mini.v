@@ -1050,17 +1050,18 @@ module Datapath(
   wire [31:0] _pc_T_1 = 32'h30000000 - 32'h4; // @[Datapath.scala 104:50]
   reg [32:0] pc; // @[Datapath.scala 104:19]
   wire [32:0] _next_pc_T_1 = pc + 33'h4; // @[Datapath.scala 107:8]
-  wire  _next_pc_T_2 = io_ctrl_pc_sel == 2'h3; // @[Datapath.scala 111:23]
-  wire  _next_pc_T_3 = io_ctrl_pc_sel == 2'h1; // @[Datapath.scala 112:24]
-  wire  _next_pc_T_4 = io_ctrl_pc_sel == 2'h1 | brCond_io_taken; // @[Datapath.scala 112:36]
-  wire [31:0] _next_pc_T_5 = {{1'd0}, alu_io_sum[31:1]}; // @[Datapath.scala 112:73]
-  wire [32:0] _next_pc_T_6 = {_next_pc_T_5, 1'h0}; // @[Datapath.scala 112:80]
-  wire  _next_pc_T_7 = io_ctrl_pc_sel == 2'h2; // @[Datapath.scala 113:23]
-  wire [32:0] _next_pc_T_8 = _next_pc_T_7 ? pc : _next_pc_T_1; // @[Mux.scala 101:16]
-  wire [32:0] _next_pc_T_9 = _next_pc_T_4 ? _next_pc_T_6 : _next_pc_T_8; // @[Mux.scala 101:16]
-  wire [32:0] _next_pc_T_10 = _next_pc_T_2 ? {{1'd0}, csr_io_epc} : _next_pc_T_9; // @[Mux.scala 101:16]
-  wire [32:0] _next_pc_T_11 = csr_io_expt ? {{1'd0}, csr_io_evec} : _next_pc_T_10; // @[Mux.scala 101:16]
-  wire [32:0] next_pc = stall ? pc : _next_pc_T_11; // @[Mux.scala 101:16]
+  wire  _next_pc_T_2 = stall | io_daxi2apb_req_valid; // @[Datapath.scala 109:14]
+  wire  _next_pc_T_3 = io_ctrl_pc_sel == 2'h3; // @[Datapath.scala 111:23]
+  wire  _next_pc_T_4 = io_ctrl_pc_sel == 2'h1; // @[Datapath.scala 112:24]
+  wire  _next_pc_T_5 = io_ctrl_pc_sel == 2'h1 | brCond_io_taken; // @[Datapath.scala 112:36]
+  wire [31:0] _next_pc_T_6 = {{1'd0}, alu_io_sum[31:1]}; // @[Datapath.scala 112:73]
+  wire [32:0] _next_pc_T_7 = {_next_pc_T_6, 1'h0}; // @[Datapath.scala 112:80]
+  wire  _next_pc_T_8 = io_ctrl_pc_sel == 2'h2; // @[Datapath.scala 113:23]
+  wire [32:0] _next_pc_T_9 = _next_pc_T_8 ? pc : _next_pc_T_1; // @[Mux.scala 101:16]
+  wire [32:0] _next_pc_T_10 = _next_pc_T_5 ? _next_pc_T_7 : _next_pc_T_9; // @[Mux.scala 101:16]
+  wire [32:0] _next_pc_T_11 = _next_pc_T_3 ? {{1'd0}, csr_io_epc} : _next_pc_T_10; // @[Mux.scala 101:16]
+  wire [32:0] _next_pc_T_12 = csr_io_expt ? {{1'd0}, csr_io_evec} : _next_pc_T_11; // @[Mux.scala 101:16]
+  wire [32:0] next_pc = _next_pc_T_2 ? pc : _next_pc_T_12; // @[Mux.scala 101:16]
   wire  flash_mode = next_pc[31:28] == 4'h3; // @[Datapath.scala 117:37]
   wire  mem_mode = next_pc[31]; // @[Datapath.scala 118:26]
   wire [31:0] _inst_T_4 = io_iaxi2apb_resp_bits_data == 32'h0 ? 32'h13 : io_iaxi2apb_resp_bits_data; // @[Datapath.scala 123:26]
@@ -1298,18 +1299,18 @@ module Datapath(
     if (reset | _io_icache_req_valid_T & csr_io_expt) begin // @[Datapath.scala 242:47]
       pc_check <= 1'h0; // @[Datapath.scala 248:14]
     end else if (_io_icache_req_valid_T & ~csr_io_expt) begin // @[Datapath.scala 249:38]
-      pc_check <= _next_pc_T_3; // @[Datapath.scala 260:14]
+      pc_check <= _next_pc_T_4; // @[Datapath.scala 260:14]
     end
     started <= reset; // @[Datapath.scala 101:31]
     if (reset) begin // @[Datapath.scala 104:19]
       pc <= {{1'd0}, _pc_T_1}; // @[Datapath.scala 104:19]
-    end else if (!(stall)) begin // @[Mux.scala 101:16]
+    end else if (!(_next_pc_T_2)) begin // @[Mux.scala 101:16]
       if (csr_io_expt) begin // @[Mux.scala 101:16]
         pc <= {{1'd0}, csr_io_evec};
-      end else if (_next_pc_T_2) begin // @[Mux.scala 101:16]
+      end else if (_next_pc_T_3) begin // @[Mux.scala 101:16]
         pc <= {{1'd0}, csr_io_epc};
       end else begin
-        pc <= _next_pc_T_9;
+        pc <= _next_pc_T_10;
       end
     end
   end

@@ -106,7 +106,7 @@ class Datapath(val conf: CoreConfig) extends Module {
   val next_pc = MuxCase(
     pc + 4.U,
     IndexedSeq(
-      stall -> pc,
+      (stall || io.daxi2apb.req.valid) -> pc,    //NOTE - daxi_en and pc no change
       csr.io.expt -> csr.io.evec,   // enter intr
       (io.ctrl.pc_sel === PC_EPC) -> csr.io.epc, // exit intr
       ((io.ctrl.pc_sel === PC_ALU) || (brCond.io.taken)) -> (alu.io.sum >> 1.U << 1.U),
