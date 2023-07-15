@@ -128,11 +128,12 @@ class Datapath(val conf: CoreConfig) extends Module {
   val uart_en = (daddrT(31, 12) === 0x1000_0.U)                                 // UART:0x1000_0000~0x1000_0FFF)
 
 // i$
-  io.icache.req.bits.addr := next_pc
-  io.icache.req.bits.data := 0.U
-  io.icache.req.bits.mask := 0.U
-  io.icache.req.valid := !stall && mem_mode
-  io.icache.abort := false.B
+  io.icache := DontCare
+  // io.icache.req.bits.addr := next_pc
+  // io.icache.req.bits.data := 0.U
+  // io.icache.req.bits.mask := 0.U
+  // io.icache.req.valid := !stall && mem_mode
+  // io.icache.abort := false.B
 // iaxi2apb
   io.iaxi2apb.req.bits.addr := next_pc
   io.iaxi2apb.req.bits.data := 0.U
@@ -229,14 +230,15 @@ import Const._
   // )
 
   // D$ access
-  io.dcache.req.valid := !stall && dcache_en
-  io.dcache.req.bits.addr := daddr
-  io.dcache.req.bits.data := rs2 << woffset
-  io.dcache.req.bits.mask := MuxLookup(
-    Mux(stall, st_type, io.ctrl.st_type),
-    "b0000".U,
-    Seq(ST_SW -> "b1111".U, ST_SH -> ("b11".U << alu.io.sum(1, 0)), ST_SB -> ("b1".U << alu.io.sum(1, 0)))
-  )
+  io.dcache := DontCare
+  // io.dcache.req.valid := !stall && dcache_en
+  // io.dcache.req.bits.addr := daddr
+  // io.dcache.req.bits.data := rs2 << woffset
+  // io.dcache.req.bits.mask := MuxLookup(
+  //   Mux(stall, st_type, io.ctrl.st_type),
+  //   "b0000".U,
+  //   Seq(ST_SW -> "b1111".U, ST_SH -> ("b11".U << alu.io.sum(1, 0)), ST_SB -> ("b1".U << alu.io.sum(1, 0)))
+  // )
 
   // Pipelining
   when(reset.asBool || !stall && csr.io.expt) {
