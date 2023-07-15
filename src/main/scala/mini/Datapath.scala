@@ -120,7 +120,7 @@ class Datapath(val conf: CoreConfig) extends Module {
   
   val inst =
     Mux(started || io.ctrl.inst_kill || brCond.io.taken || csr.io.expt, Instructions.NOP, 
-      Mux(flash_mode, io.iaxi2apb.resp.bits.data, io.icache.resp.bits.data))
+      Mux(flash_mode, Mux(io.iaxi2apb.resp.bits.data ===  0.U, Instructions.NOP, io.iaxi2apb.resp.bits.data), io.icache.resp.bits.data))    //FIXME -  后面变成0，但是返回引号很奇怪呢
   pc := next_pc
   
   val daddrT = Mux(stall, ew_reg.alu, alu.io.sum)
@@ -138,11 +138,11 @@ class Datapath(val conf: CoreConfig) extends Module {
   io.iaxi2apb.req.bits.data := 0.U
   io.iaxi2apb.req.bits.mask := 0.U
   // io.iaxi2apb.req.valid := !stall && flash_mode && !uart_en
-  io.iaxi2apb.req.valid := !stall // && !io.daxi2apb.req.valid
+  io.iaxi2apb.req.valid := !stall && !io.daxi2apb.req.valid
   io.iaxi2apb.abort := false.B
 
   // Pipelining
-  when(!stall) {
+  when(!stall) {       // 加上当uart访问时，不更新
     fe_reg.pc := pc
     fe_reg.inst := inst
   }
@@ -166,11 +166,13 @@ class Datapath(val conf: CoreConfig) extends Module {
   val wb_rd_addr = ew_reg.inst(11, 7)
   val rs1hazard = wb_en && rs1_addr.orR && (rs1_addr === wb_rd_addr)
   val rs2hazard = wb_en && rs2_addr.orR && (rs2_addr === wb_rd_addr)
-  val rs1 = Mux(wb_sel === WB_ALU && rs1hazard, ew_reg.alu, regFile.io.rdata1)
-  val rs2 = Mux(wb_sel === WB_ALU && rs2hazard, ew_reg.alu, regFile.io.rdata2)
+  // val rs1 = Mux(wb_sel === WB_ALU && rs1hazard, ew_reg.alu, regFile.io.rdata1)
+  // val rs2 = Mux(wb_sel === WB_ALU && rs2hazard, ew_reg.alu, regFile.io.rdata2)
 
+  val rs1 = Mux(wb_sel === WB_MEM && rs1hazard, regFile.io.wdata, Mux(wb_sel === WB_ALU && rs1hazard, ew_reg.alu, regFile.io.rdata1))
+  val rs2 = Mux(wb_sel === WB_ALU && rs2hazard, ew_reg.alu, regFile.io.rdata2)
   // ALU operations
-  alu.io.A := Mux(io.ctrl.A_sel === A_RS1, rs1, fe_reg.pc)        // FIXME - 数据冲突
+  alu.io.A := Mux(io.ctrl.A_sel === A_RS1, rs1, fe_reg.pc)
   alu.io.B := Mux(io.ctrl.B_sel === B_RS2, rs2, immGen.io.out)
   alu.io.alu_op := io.ctrl.alu_op
 
@@ -184,7 +186,7 @@ import Const._
   // val daddrT = Mux(stall, ew_reg.alu, alu.io.sum)
 
   // val clint_en = (daddrT(31, 16) === 0x0200.U)                                  // Clint:0x0200_0000~0x0200_FFFF
-  val uart_en = (daddrT(31, 12) === 0x1000_0.U)                                 // UART:0x1000_0000~0x1000_0FFF)
+  // val uart_en = (daddrT(31, 12) === 0x1000_0.U)                                 // UART:0x1000_0000~0x1000_0FFF)
 
   // val daxi2apb_en = flash_mode && (io.ctrl.st_type.orR || io.ctrl.ld_type.orR) && (daddrT(31, 31) === 0x1.U) 
   val dcache_en = mem_mode && (io.ctrl.st_type.orR || io.ctrl.ld_type.orR) && (daddrT(31, 31) === 0x1.U)                                     // MEM:0x8000_0000~0xFBFF_FFFF / SDRAM:0xFC00_0000~0xFFFF_FFFF
@@ -209,7 +211,7 @@ import Const._
   io.daxi2apb.req.valid := !stall && (io.ctrl.st_type.orR || io.ctrl.ld_type.orR)   // && daxi2apb_en
   io.daxi2apb.req.bits.addr := daddrT
   io.daxi2apb.req.bits.data := rs2 << woffset
-  io.daxi2apb.req.bits.mask := MuxLookup(       //FIXME - notice modidy
+  io.daxi2apb.req.bits.mask := MuxLookup(
     Mux(stall, st_type, io.ctrl.st_type),
     "b0000".U,
     Seq(ST_SW -> "b1111".U, ST_SH -> ("b11".U << alu.io.sum(1, 0)), ST_SB -> ("b1".U << alu.io.sum(1, 0)))
