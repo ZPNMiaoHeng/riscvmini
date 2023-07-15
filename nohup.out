@@ -1,0 +1,30 @@
+libva error: vaGetDriverNameByIndex() failed with unknown libva error, driver_name = (null)
+[90m[main 2023-07-13T12:15:36.987Z][0m update#ctor - updates are disabled as there is no update URL
+[93m[main 2023-07-13T12:15:44.749Z][0m No ptyHost heartbeat after 6 seconds
+[90m[main 2023-07-13T12:16:06.522Z][0m Extension host with pid 6044 exited with code: 0, signal: unknown.
+[91m[main 2023-07-13T12:23:00.620Z][0m [UtilityProcessWorker]: terminated unexpectedly with code 15, signal: unknown
+[91m[main 2023-07-13T12:23:00.621Z][0m [UtilityProcess id: 1, type: fileWatcher, pid: 6370]: crashed with code 15 and reason 'killed'
+[90m[main 2023-07-13T12:23:00.656Z][0m Extension host with pid 6369 exited with code: 0, signal: unknown.
+libva error: vaGetDriverNameByIndex() failed with unknown libva error, driver_name = (null)
+[90m[main 2023-07-14T13:31:36.292Z][0m update#ctor - updates are disabled as there is no update URL
+[55001:0714/213512.375227:ERROR:network_service_instance_impl.cc(521)] Network service crashed, restarting service.
+[91m[main 2023-07-14T13:35:12.380Z][0m ptyHost terminated unexpectedly with code 0
+[55001:0714/213512.388088:ERROR:zygote_communication_linux.cc(291)] Failed to send GetTerminationStatus message to zygote
+[90m[main 2023-07-14T13:35:12.392Z][0m Extension host with pid 55369 exited with code: 0, signal: unknown.
+[55001:0714/213512.393555:ERROR:gpu_process_host.cc(985)] GPU process launch failed: error_code=1002
+[55001:0714/213512.395854:ERROR:zygote_communication_linux.cc(291)] Failed to send GetTerminationStatus message to zygote
+[91m[main 2023-07-14T13:35:12.396Z][0m CodeWindow: renderer process gone (reason: clean-exit, code: <unknown>)
+[55001:0714/213512.548348:ERROR:gpu_process_host.cc(985)] GPU process launch failed: error_code=1002
+[55001:0714/213512.551149:ERROR:gpu_process_host.cc(985)] GPU process launch failed: error_code=1002
+[55001:0714/213512.552628:ERROR:gpu_process_host.cc(985)] GPU process launch failed: error_code=1002
+[55001:0714/213512.553298:ERROR:gpu_process_host.cc(985)] GPU process launch failed: error_code=1002
+[55001:0714/213512.553801:ERROR:gpu_process_host.cc(985)] GPU process launch failed: error_code=1002
+[55001:0714/213512.554698:ERROR:gpu_process_host.cc(985)] GPU process launch failed: error_code=1002
+[55001:0714/213512.555176:ERROR:gpu_process_host.cc(985)] GPU process launch failed: error_code=1002
+[55001:0714/213512.555589:ERROR:gpu_process_host.cc(985)] GPU process launch failed: error_code=1002
+[55001:0714/213512.555604:FATAL:gpu_data_manager_impl_private.cc(440)] GPU process isn't usable. Goodbye.
+[0714/213512.559841:ERROR:elf_dynamic_array_reader.h(64)] tag not found
+[0714/213512.560290:ERROR:elf_dynamic_array_reader.h(64)] tag not found
+[0714/213512.560341:ERROR:elf_dynamic_array_reader.h(64)] tag not found
+[0714/213512.560551:ERROR:elf_dynamic_array_reader.h(64)] tag not found
+[0714/213512.560579:ERROR:elf_dynamic_array_reader.h(64)] tag not found

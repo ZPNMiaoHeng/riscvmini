@@ -23,6 +23,10 @@ object Const {
   val MEM_MASK = 0x8000_0000
 }
 
+// object DpathState extends ChiselEnum {
+//   val sIdle, sReadCache, sWriteCache, sWriteBack, sWriteAck, sRefillReady, sRefill = Value
+// }
+
 class DatapathIO(xlen: Int) extends Bundle {
   val host = new HostIO(xlen)
   val icache = Flipped(new CacheIO(xlen, xlen))
@@ -119,17 +123,21 @@ class Datapath(val conf: CoreConfig) extends Module {
       Mux(flash_mode, io.iaxi2apb.resp.bits.data, io.icache.resp.bits.data))
   pc := next_pc
   
+  val daddrT = Mux(stall, ew_reg.alu, alu.io.sum)
+  val clint_en = (daddrT(31, 16) === 0x0200.U)                                  // Clint:0x0200_0000~0x0200_FFFF
+  val uart_en = (daddrT(31, 12) === 0x1000_0.U)                                 // UART:0x1000_0000~0x1000_0FFF)
+
 // i$
   io.icache.req.bits.addr := next_pc
   io.icache.req.bits.data := 0.U
   io.icache.req.bits.mask := 0.U
-  io.icache.req.valid := !stall && mem_mode 
+  io.icache.req.valid := !stall && mem_mode
   io.icache.abort := false.B
 // iaxi2apb
   io.iaxi2apb.req.bits.addr := next_pc
   io.iaxi2apb.req.bits.data := 0.U
   io.iaxi2apb.req.bits.mask := 0.U
-  io.iaxi2apb.req.valid := !stall && flash_mode 
+  io.iaxi2apb.req.valid := !stall && flash_mode && !uart_en
   io.iaxi2apb.abort := false.B
 
   // Pipelining
@@ -172,10 +180,10 @@ class Datapath(val conf: CoreConfig) extends Module {
 
 import Const._
 //  val daddr = Mux(stall, ew_reg.alu, alu.io.sum) >> 2.U << 2.U
-  val daddrT = Mux(stall, ew_reg.alu, alu.io.sum)
+  // val daddrT = Mux(stall, ew_reg.alu, alu.io.sum)
 
-  val clint_en = (daddrT(31, 16) === 0x0200.U)                                  // Clint:0x0200_0000~0x0200_FFFF
-  val uart_en = (daddrT(31, 12) === 0x1000_0.U)                                 // UART:0x1000_0000~0x1000_0FFF)
+  // val clint_en = (daddrT(31, 16) === 0x0200.U)                                  // Clint:0x0200_0000~0x0200_FFFF
+  // val uart_en = (daddrT(31, 12) === 0x1000_0.U)                                 // UART:0x1000_0000~0x1000_0FFF)
   val daxi2apb_en = flash_mode && (io.ctrl.st_type.orR || io.ctrl.ld_type.orR) && (daddrT(31, 31) === 0x1.U) 
   val dcache_en = mem_mode && (io.ctrl.st_type.orR || io.ctrl.ld_type.orR) && (daddrT(31, 31) === 0x1.U)                                     // MEM:0x8000_0000~0xFBFF_FFFF / SDRAM:0xFC00_0000~0xFFFF_FFFF
 

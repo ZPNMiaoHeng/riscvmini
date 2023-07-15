@@ -82,20 +82,43 @@ class MemArbiter(params: NastiBundleParameters) extends Module {
     !io.nasti.aw.valid && state === sIdle
 
   io.daxi2apb.ar.ready := io.nasti.ar.ready && !io.nasti.aw.valid && state === sIdle
-  io.iaxi2apb.ar.ready := io.daxi2apb.ar.ready && !io.daxi2apb.ar.valid
-  io.dcache.ar.ready := io.iaxi2apb.ar.ready && !io.iaxi2apb.ar.valid
+  io.uart.ar.ready := io.daxi2apb.ar.ready && !io.daxi2apb.ar.valid
+  io.iaxi2apb.ar.ready := io.uart.ar.ready && !io.uart.ar.valid
+  // io.iaxi2apb.ar.ready := io.daxi2apb.ar.ready && !io.daxi2apb.ar.valid && !
+  // io.iaxi2apb.ar.ready := io.nasti.ar.ready && !io.nasti.aw.valid && state === sIdle && !io.daxi2apb.ar.valid
+
+  io.dcache.ar.ready := io.iaxi2apb.ar.ready && !io.iaxi2apb.ar.valid 
   io.icache.ar.ready := io.dcache.ar.ready && !io.dcache.ar.valid
-  io.uart.ar.ready := io.icache.ar.ready && !io.icache.ar.valid
 
   // io.dcache.ar.ready := io.nasti.ar.ready && !io.nasti.aw.valid && state === sIdle
   // io.icache.ar.ready := io.dcache.ar.ready && !io.dcache.ar.valid
 
   // Read Data
-  io.iaxi2apb.r.bits := io.nasti.r.bits
-  io.daxi2apb.r.bits := io.nasti.r.bits
-  io.icache.r.bits := io.nasti.r.bits
-  io.dcache.r.bits := io.nasti.r.bits
-  io.uart.r.bits := io.nasti.r.bits
+    io.iaxi2apb.r.bits.id   := Mux(state === sIApbRead, io.nasti.r.bits.id  , 0.U)
+    io.iaxi2apb.r.bits.data := Mux(state === sIApbRead, io.nasti.r.bits.data, 0.U)
+    io.iaxi2apb.r.bits.resp := Mux(state === sIApbRead, io.nasti.r.bits.resp, 0.U)
+    io.iaxi2apb.r.bits.last := Mux(state === sIApbRead, io.nasti.r.bits.last, 0.U)
+
+    io.daxi2apb.r.bits.id   := Mux(state === sDApbRead, io.nasti.r.bits.id  , 0.U)
+    io.daxi2apb.r.bits.data := Mux(state === sDApbRead, io.nasti.r.bits.data, 0.U)
+    io.daxi2apb.r.bits.resp := Mux(state === sDApbRead, io.nasti.r.bits.resp, 0.U)
+    io.daxi2apb.r.bits.last := Mux(state === sDApbRead, io.nasti.r.bits.last, 0.U)
+  // io.daxi2apb.r.bits := io.nasti.r.bits
+  // io.icache.r.bits := io.nasti.r.bits
+    io.icache.r.bits.id   := Mux(state === sICacheRead, io.nasti.r.bits.id  , 0.U)
+    io.icache.r.bits.data := Mux(state === sICacheRead, io.nasti.r.bits.data, 0.U)
+    io.icache.r.bits.resp := Mux(state === sICacheRead, io.nasti.r.bits.resp, 0.U)
+    io.icache.r.bits.last := Mux(state === sICacheRead, io.nasti.r.bits.last, 0.U)
+  // io.dcache.r.bits := io.nasti.r.bits
+    io.dcache.r.bits.id   := Mux(state === sDCacheRead, io.nasti.r.bits.id  , 0.U)
+    io.dcache.r.bits.data := Mux(state === sDCacheRead, io.nasti.r.bits.data, 0.U)
+    io.dcache.r.bits.resp := Mux(state === sDCacheRead, io.nasti.r.bits.resp, 0.U)
+    io.dcache.r.bits.last := Mux(state === sDCacheRead, io.nasti.r.bits.last, 0.U)
+  // io.uart.r.bits := io.nasti.r.bits
+    io.uart.r.bits.id   := Mux(state === sUartRead, io.nasti.r.bits.id  , 0.U)
+    io.uart.r.bits.data := Mux(state === sUartRead, io.nasti.r.bits.data, 0.U)
+    io.uart.r.bits.resp := Mux(state === sUartRead, io.nasti.r.bits.resp, 0.U)
+    io.uart.r.bits.last := Mux(state === sUartRead, io.nasti.r.bits.last, 0.U)
 
   io.iaxi2apb.r.valid := io.nasti.r.valid && state === sIApbRead
   io.daxi2apb.r.valid := io.nasti.r.valid && state === sDApbRead
@@ -114,18 +137,19 @@ class MemArbiter(params: NastiBundleParameters) extends Module {
         state := sDApbWrite
       }.elsewhen(io.daxi2apb.ar.fire) {
         state := sDApbRead
+      }.elsewhen(io.uart.aw.fire) {
+        state := sUartWrite
+      }.elsewhen(io.uart.ar.fire) {
+        state := sUartRead
       }.elsewhen(io.iaxi2apb.ar.fire) {
         state := sIApbRead
-      }.elsewhen(io.dcache.aw.fire) {
+      }  // cache no care 
+      .elsewhen(io.dcache.aw.fire) {
         state := sDCacheWrite
       }.elsewhen(io.dcache.ar.fire) {
         state := sDCacheRead
       }.elsewhen(io.icache.ar.fire) {
         state := sICacheRead
-      }.elsewhen(io.uart.aw.fire) {
-        state := sUartWrite
-      }.elsewhen(io.uart.ar.fire) {
-        state := sUartRead
       }
     }
     // FLASH MODE APB
@@ -135,7 +159,7 @@ class MemArbiter(params: NastiBundleParameters) extends Module {
       }
     }
     is(sDApbRead) {
-      when(io.nasti.r.fire && io.nasti.r.bits.last) {
+      when(io.nasti.r.fire && io.nasti.r.bits.last) {   // TODO 可以添加直接跳转取值 sIApbRead
         state := sIdle
       }
     }

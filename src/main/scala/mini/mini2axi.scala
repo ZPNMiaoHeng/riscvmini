@@ -32,16 +32,20 @@ class Mini2axi(val nasti: NastiBundleParameters, val xlen: Int) extends Module {
     val is_write_back = state === sWriteBack
 
     val reg_mask = RegInit(0.U(4.W))
+    val reg_addr = RegInit(0.U(xlen.W))
     val reg_data = RegInit(0.U(xlen.W))
 
       // Read Mux
-    io.cpu.resp.bits.data := Fill(32, !io.cpu.req.bits.mask.orR) & io.nasti.r.bits.data
+    io.cpu.resp.bits.data := Mux(io.cpu.req.bits.mask.orR,  Instructions.NOP, io.nasti.r.bits.data)
+    // io.cpu.resp.bits.data := Fill(32, !io.cpu.req.bits.mask.orR) & io.nasti.r.bits.data
     io.cpu.resp.valid := is_idle || io.nasti.r.fire || io.nasti.b.fire 
+    // io.cpu.resp.valid := io.nasti.r.fire || io.nasti.b.fire
 
     // transform 32-byte data
     io.nasti.ar.bits := NastiAddressBundle(nasti)(
         0.U,                          // id
         io.cpu.req.bits.addr,         // addr
+        // reg_addr,
         2.U,                          // size
         0.U                           // len
     )
@@ -51,7 +55,9 @@ class Mini2axi(val nasti: NastiBundleParameters, val xlen: Int) extends Module {
 
     io.nasti.aw.bits := NastiAddressBundle(nasti)(
         0.U,
-        io.cpu.req.bits.addr,
+        // io.cpu.req.bits.addr,
+        // RegNext(io.cpu.req.bits.addr),
+        reg_addr,
         2.U,
         0.U
     )
@@ -73,6 +79,7 @@ class Mini2axi(val nasti: NastiBundleParameters, val xlen: Int) extends Module {
     switch(state) {
         is(sIdle) {
             when(io.cpu.req.valid) {
+                reg_addr := io.cpu.req.bits.addr
                 reg_data := io.cpu.req.bits.data
                 reg_mask := io.cpu.req.bits.mask
                 state := Mux(io.cpu.req.bits.mask.orR, sWriteAddr, sReadAddr)
