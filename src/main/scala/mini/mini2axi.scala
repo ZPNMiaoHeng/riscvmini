@@ -97,6 +97,7 @@ class Mini2axi(val nasti: NastiBundleParameters, val xlen: Int) extends Module {
                 when(io.cpu.req.valid) {
                     reg_data := io.cpu.req.bits.data
                     reg_mask := io.cpu.req.bits.mask
+                    reg_addr := io.cpu.req.bits.addr
                     state := Mux(io.cpu.req.bits.mask.orR, sWriteAddr, sReadAddr)
                 } .otherwise {
                     state := sIdle
@@ -120,7 +121,15 @@ class Mini2axi(val nasti: NastiBundleParameters, val xlen: Int) extends Module {
 
         is(sWriteBack) {
             when(io.nasti.b.fire) {
-                state := sIdle
+                // state := sIdle
+                when(io.cpu.req.valid) {
+                    reg_data := io.cpu.req.bits.data
+                    reg_mask := io.cpu.req.bits.mask
+                    reg_addr := io.cpu.req.bits.addr
+                    state := Mux(io.cpu.req.bits.mask.orR, sWriteAddr, sReadAddr)
+                } .otherwise {
+                    state := sIdle
+                }
             }
         }
     }

@@ -97,7 +97,7 @@ object Cause {
   val StoreAddrMisaligned = 0x6.U
   val Ecall = 0x8.U
 
-  val MachineTimerInterrupt = 0x7.U   //FIXME - 0x8000_00007
+  val MachineTimerInterrupt = 0x7.U   //NOTE - 0x8000_00007
 }
 
 class CSRIO(xlen: Int) extends Bundle {
@@ -117,10 +117,11 @@ class CSRIO(xlen: Int) extends Bundle {
   val evec = Output(UInt(xlen.W))   //????
   val epc = Output(UInt(xlen.W))
 
-  val in_valid = Input(Bool())
-  val in_mtimecmp = Input(UInt(64.W))
-  val out_mtimecmp = Output(UInt(64.W))
-  val mTimerInterrupt = Output(Bool())
+  // val in_valid = Input(Bool())
+  // val in_mtimecmp = Input(UInt(64.W))
+  // val out_mtimecmp = Output(UInt(64.W))
+  // val mTimerInterrupt = Output(Bool())
+  val clint = new CacheIO(xlen, xlen)
   // HTIF
   val host = new HostIO(xlen)
 }
@@ -148,25 +149,6 @@ class CSR(val xlen: Int) extends Module {
   val mimpid = 0.U(xlen.W) // not implemented
   val mhartid = 0.U(xlen.W) // only one hart
 
-  // // interrupt enable stack
-  // val PRV = RegInit(CSR.PRV_M)
-  // val PRV1 = RegInit(CSR.PRV_M)
-  // val PRV2 = 0.U(2.W)
-  // val PRV3 = 0.U(2.W)
-  // val IE = RegInit(false.B)      // MIE
-  // val IE1 = RegInit(false.B)     // MPIE
-  // val IE2 = false.B
-  // val IE3 = false.B
-  // // virtualization management field
-  // val VM = 0.U(5.W)
-  // // memory privilege
-  // val MPRV = false.B
-  // // extention context status
-  // val XS = 0.U(2.W)
-  // val FS = 0.U(2.W)
-  // val SD = 0.U(1.W)
-  // val mstatus = Cat(SD, 0.U((xlen - 23).W), VM, MPRV, XS, FS, PRV3, IE3, PRV2, IE2, PRV1, IE1, PRV, IE)
-
   val MIE = RegInit(false.B)   //TODO - 启用中断
   val MPIE = RegInit(false.B)   //TODO - trap 之前的MIE
   val MPP = RegInit(CSR.PRV_M)  //TODO - tarp 之前的特权模式
@@ -184,8 +166,7 @@ class CSR(val xlen: Int) extends Module {
 
   val mstatus = Cat(SD, 0.U((xlen - 23).W), VM, MPRV, XS, FS, MPP, VS ,SPP, MPIE, UBE, SPIE, WPRI, MIE, WPRI, SIE, WPRI)
   
-  // val mtvec = Const.PC_EVEC.U(xlen.W)         //NOTE - 0x100, Direct Mode
-  val mtvec = RegInit(Const.PC_EVEC.U(xlen.W))  // Declare mtvec as a Reg
+  val mtvec = RegInit(Const.PC_EVEC.U(xlen.W))
   val mtdeleg = 0x0.U(xlen.W)
 
   // interrupt registers
@@ -205,6 +186,7 @@ class CSR(val xlen: Int) extends Module {
   val mie = Cat(0.U((xlen - 8).W), MTIE, HTIE, STIE, false.B, MSIE, HSIE, SSIE, false.B)
 
   val mtimecmp = Reg(UInt(xlen.W))
+  val mtimecmpH = Reg(UInt(xlen.W))
 
   val mscratch = Reg(UInt(xlen.W))
 
@@ -259,6 +241,7 @@ class CSR(val xlen: Int) extends Module {
   val isEcall = privInst && !csr_addr(0) && !csr_addr(8)
   val isEbreak = privInst && csr_addr(0) && !csr_addr(8)
   val isEret = privInst && !csr_addr(0) && csr_addr(8)
+  val isMret = privInst && !csr_addr(0) && csr_addr(1) && csr_addr(8) && csr_addr(9)
   val csrValid = csrFile.map(_._1 === csr_addr).reduce(_ || _)  //NOTE - 判断csr地址是否有效！ scala用法
   // val csrRO = csr_addr(11, 10).andR || csr_addr === CSR.mtvec || csr_addr === CSR.mtdeleg
   val csrRO = csr_addr(11, 10).andR || csr_addr === CSR.mtdeleg
@@ -281,22 +264,52 @@ class CSR(val xlen: Int) extends Module {
   val saddrInvalid =
     MuxLookup(io.st_type, false.B, Seq(Control.ST_SW -> io.addr(1, 0).orR, Control.ST_SH -> io.addr(0)))
 
-  val mtime = RegInit(0.U(64.W))
-  mtime := timeh ## time
-  // val mtimecmp = RegInit(0.U(64.W))
-  when(io.in_valid) {
-    mtimecmp := io.in_mtimecmp
+  // val mtime = RegInit(0.U(64.W))
+  val mtimeLEn = io.clint.req.valid && (io.clint.req.bits.addr === 0x0200_BFF8.U)
+  val mtimeHEn = io.clint.req.valid && (io.clint.req.bits.addr === 0x0200_BFFC.U)
+  val mtimecmpLEn = io.clint.req.valid && (io.clint.req.bits.addr === 0x0200_4000.U)
+  val mtimecmpHEn = io.clint.req.valid && (io.clint.req.bits.addr === 0x0200_4004.U)
+  // time := Mux(io.clint.req.mask.orR && mtimeLEn, 
+  when(io.clint.req.bits.mask.orR) {
+    when(mtimeLEn) {
+      time := io.clint.req.bits.data
+    }.elsewhen(mtimeHEn) {
+      timeh := io.clint.req.bits.data
+    }.elsewhen(mtimecmpLEn) {
+      mtimecmp := io.clint.req.bits.data
+    }.elsewhen(mtimecmpHEn) {
+      mtimecmpH := io.clint.req.bits.data
+    }
   }
+  io.clint.resp.bits.data := Mux(!io.clint.req.bits.mask.orR && io.clint.req.valid, 
+    MuxLookup(
+      io.clint.req.bits.addr,
+      0.U,
+      Seq(
+        0x0200_BFF8.U -> time,
+        0x0200_BFFC.U -> timeh,
+        0x0200_4000.U -> mtimecmp,
+        0x0200_4004.U -> mtimecmpH
+        )
+      ),
+      0.U)
+  io.clint.resp.valid :=  RegNext(io.clint.req.valid) // FIXME
 
-  val mTimerInterrupt = (mtime > mtimecmp) && MTIE && MIE
+  val mtime = timeh ## time
+  val mtimecmpT = mtimecmpH ## mtimecmp
+  // when(io.in_valid) {
+    // mtimecmp := io.in_mtimecmp
+  // }
 
-  io.mTimerInterrupt := mTimerInterrupt
-  io.out_mtimecmp := mtimecmp
+  val mTimerInterrupt = (mtime > mtimecmpT) && MTIE && MIE
+
+  // io.mTimerInterrupt := mTimerInterrupt
+  // io.out_mtimecmp := mtimecmp
   io.expt := io.illegal || iaddrInvalid || laddrInvalid || saddrInvalid ||
-    io.cmd(1, 0).orR && (!csrValid || !privValid) || wen && csrRO ||                // TODO - cmd???
+    io.cmd(1, 0).orR && (!csrValid || !privValid) || wen && csrRO ||
     (privInst && !privValid) || isEcall || isEbreak || mTimerInterrupt
-  io.evec := mtvec // FIXME - why use it  + (PRV << 6)   // mtvec + PRV ## 00_0000
-  io.epc := mepc   //NOTE - mret：exit pc
+  io.evec := mtvec // NOTE - why use it  + (PRV << 6)   // mtvec + PRV ## 00_0000 -> low Trap Vector Address=0x1C0
+  io.epc := mepc   //NOTE - eret/mret：exit pc
 
   // Counters
   time := time + 1.U
@@ -330,27 +343,14 @@ class CSR(val xlen: Int) extends Module {
       MPIE := MIE
       MIE := false.B
       MPP := CSR.PRV_M
-
-      // PRV := CSR.PRV_M
-      // IE := false.B
-      // PRV1 := PRV
-      // IE1 := IE
       when(iaddrInvalid || laddrInvalid || saddrInvalid) { mbadaddr := io.addr }
-    }.elsewhen(isEret) {
+    }.elsewhen(isMret) {
       MIE := MPIE
       MPIE := true.B
       MPP := CSR.PRV_U
 
-      // PRV := PRV1
-      // IE := IE1
-      // PRV1 := CSR.PRV_U
-      // IE1 := true.B
     }.elsewhen(wen) {
-      when(csr_addr === CSR.mstatus) {  //FIXME - 
-        // PRV1 := wdata(5, 4)
-        // IE1 := wdata(3)
-        // PRV := wdata(2, 1)
-        // IE := wdata(0)
+      when(csr_addr === CSR.mstatus) {
         MIE := wdata(3)
         MPIE := wdata(7)
         MPP := wdata(12, 11)
