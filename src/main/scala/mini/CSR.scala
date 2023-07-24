@@ -100,6 +100,10 @@ object Cause {
   val MachineTimerInterrupt = 0x7.U   //NOTE - 0x8000_00007
 }
 
+// object ClintState extends ChiselEnum {
+//     val sIdle, sRead, sWrite = Value
+// }
+
 class CSRIO(xlen: Int) extends Bundle {
   val stall = Input(Bool())
   val cmd = Input(UInt(3.W))
@@ -265,6 +269,33 @@ class CSR(val xlen: Int) extends Module {
     MuxLookup(io.st_type, false.B, Seq(Control.ST_SW -> io.addr(1, 0).orR, Control.ST_SH -> io.addr(0)))
 
   // val mtime = RegInit(0.U(64.W))
+//TODO - add FSM control
+  // import ClintState._
+  // val state = RegInit(sIdle)
+  // val is_idle = state === sIdle
+  // val is_read = state === sRead
+  // val is_write = state === sWrite
+  // // FSM
+  // switch(state) {
+  //   is(sIdle) {
+  //     when(io.clint.req.valid) {
+  //       state := Mux(io.clint.req.bits.mask.orR, sWrite, sRead)
+  //     }
+  //   }
+  //   is(sRead) {
+  //     // when(io.clint.req.valid) {
+  //       // state := Mux(io.clint.req.bits.mask.orR, sWrite, sRead)
+  //     // }
+  //     state := sIdle
+  //   }
+  //   is(sWrite) {
+  //     // when(io.clint.req.valid) {
+  //       // state := Mux(io.clint.req.bits.mask.orR, sWrite, sRead)
+  //     // }
+  //     state := sIdle
+  //   }
+  // }
+
   val mtimeLEn = io.clint.req.valid && (io.clint.req.bits.addr === 0x0200_BFF8.U)
   val mtimeHEn = io.clint.req.valid && (io.clint.req.bits.addr === 0x0200_BFFC.U)
   val mtimecmpLEn = io.clint.req.valid && (io.clint.req.bits.addr === 0x0200_4000.U)
@@ -281,7 +312,7 @@ class CSR(val xlen: Int) extends Module {
       mtimecmpH := io.clint.req.bits.data
     }
   }
-  io.clint.resp.bits.data := Mux(!io.clint.req.bits.mask.orR && io.clint.req.valid, 
+  io.clint.resp.bits.data := RegNext(Mux(!io.clint.req.bits.mask.orR && io.clint.req.valid, 
     MuxLookup(
       io.clint.req.bits.addr,
       0.U,
@@ -293,7 +324,9 @@ class CSR(val xlen: Int) extends Module {
         )
       ),
       0.U)
-  io.clint.resp.valid :=  RegNext(io.clint.req.valid) // FIXME
+  )
+  io.clint.resp.valid :=  RegNext(io.clint.req.valid)
+  // io.clint.resp.valid := io.clint.req.valid
 
   val mtime = timeh ## time
   val mtimecmpT = mtimecmpH ## mtimecmp

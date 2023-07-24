@@ -65,7 +65,7 @@ class Datapath(val conf: CoreConfig) extends Module {
   /** *** Fetch / Execute Registers ****
     */
   val fe_reg = RegInit(
-    (new FetchExecutePipelineRegister(conf.xlen)).Lit(           // TODO Lit
+    (new FetchExecutePipelineRegister(conf.xlen)).Lit(
       _.inst -> Instructions.NOP,
       _.pc -> 0.U
     )
@@ -95,14 +95,15 @@ class Datapath(val conf: CoreConfig) extends Module {
   val illegal = Reg(Bool())
   val pc_check = Reg(Bool())
   
-  val clint_reg = RegInit(false.B)
+  // val clint_reg = RegInit(false.B)
+  // val clint_data_reg = RegInit(0.U(64.W))
   // val mem_en = Wire(Bool())
 
   /** **** Fetch ****
     */
   val started = RegNext(reset.asBool)
   val stall = !io.icache.resp.valid || !io.dcache.resp.valid || 
-                !io.iaxi2apb.resp.valid || !io.daxi2apb.resp.valid || !io.uart.resp.valid || clint_reg // FIXME - clint
+                !io.iaxi2apb.resp.valid || !io.daxi2apb.resp.valid || !io.uart.resp.valid//FIXME -  || !csr.io.clint.resp.valid // clint_reg
   val pc = RegInit(Const.PC_START.U(conf.xlen.W) - 4.U(conf.xlen.W))
   // Next Program Counter
   val next_pc = MuxCase(
@@ -121,7 +122,7 @@ class Datapath(val conf: CoreConfig) extends Module {
   
   val inst =
     Mux(started || io.ctrl.inst_kill || brCond.io.taken || csr.io.expt, Instructions.NOP, 
-      Mux(flash_mode, Mux(io.iaxi2apb.resp.bits.data ===  0.U, Instructions.NOP, io.iaxi2apb.resp.bits.data), io.icache.resp.bits.data))    //FIXME -  后面变成0，但是返回引号很奇怪呢
+      Mux(flash_mode, Mux(io.iaxi2apb.resp.bits.data ===  0.U, Instructions.NOP, io.iaxi2apb.resp.bits.data), io.icache.resp.bits.data))
   pc := next_pc
   
   val daddrT = Mux(stall, ew_reg.alu, alu.io.sum)
@@ -206,7 +207,7 @@ import Const._
 
 //* daxi2apb 
   io.daxi2apb.abort := false.B
-  io.daxi2apb.req.valid := !stall && (io.ctrl.st_type.orR || io.ctrl.ld_type.orR)  && !clint_en
+  io.daxi2apb.req.valid := !stall && (io.ctrl.st_type.orR || io.ctrl.ld_type.orR)//  && !clint_en
   io.daxi2apb.req.bits.addr := daddrT
   io.daxi2apb.req.bits.data := rs2 << woffset
   io.daxi2apb.req.bits.mask := MuxLookup(
@@ -216,20 +217,24 @@ import Const._
   )
 
   // //* time
-  when(csr.io.clint.req.valid){
-    clint_reg := true.B
-  } .elsewhen(csr.io.clint.resp.valid){
-    clint_reg := false.B
-  }
-  csr.io.clint.abort := false.B
-  csr.io.clint.req.valid := !stall && (io.ctrl.st_type.orR || io.ctrl.ld_type.orR) && clint_en
-  csr.io.clint.req.bits.addr := daddrT
-  csr.io.clint.req.bits.data := rs2 << woffset
-  csr.io.clint.req.bits.mask := MuxLookup(
-    Mux(stall, st_type, io.ctrl.st_type),
-    "b0000".U,
-    Seq(ST_SW -> "b1111".U, ST_SH -> ("b11".U << alu.io.sum(1, 0)), ST_SB -> ("b1".U << alu.io.sum(1, 0)))
-  )
+  // when(csr.io.clint.req.valid){
+  //   clint_reg := true.B
+  // } .elsewhen(csr.io.clint.resp.valid){
+  //   clint_reg := false.B
+  // }
+  // when(csr.io.clint.resp.valid) {
+    // clint_data_reg := csr.io.clint.resp.bits.data
+  // }
+  csr.io.clint := DontCare
+  // csr.io.clint.abort := false.B
+  // csr.io.clint.req.valid := !stall && (io.ctrl.st_type.orR || io.ctrl.ld_type.orR) && clint_en
+  // csr.io.clint.req.bits.addr := daddrT
+  // csr.io.clint.req.bits.data := rs2 << woffset
+  // csr.io.clint.req.bits.mask := MuxLookup(
+  //   Mux(stall, st_type, io.ctrl.st_type),
+  //   "b0000".U,
+  //   Seq(ST_SW -> "b1111".U, ST_SH -> ("b11".U << alu.io.sum(1, 0)), ST_SB -> ("b1".U << alu.io.sum(1, 0)))
+  // )
 
   // D$ access
   io.dcache := DontCare
@@ -270,12 +275,15 @@ import Const._
   //                Mux(RegNext(uart_en), io.uart.resp.bits.data, 
   //                   io.dcache.resp.bits.data)) >> loffset
 
-  val lshift = Mux(clint_en, csr.io.clint.resp.bits.data, io.daxi2apb.resp.bits.data) >> loffset
+  val lshift = io.daxi2apb.resp.bits.data >> loffset
+  // val lshift = Mux(clint_en, csr.io.clint.resp.bits.data, io.daxi2apb.resp.bits.data) >> loffset
+  // val lshift = Mux(clint_en, clint_data_reg, io.daxi2apb.resp.bits.data) >> loffset
 
   val load = MuxLookup(
     ld_type,
     // io.dcache.resp.bits.data.zext,
-    Mux(clint_en, csr.io.clint.resp.bits.data.zext, io.daxi2apb.resp.bits.data.zext),
+    io.daxi2apb.resp.bits.data.zext,
+    // Mux(clint_en, csr.io.clint.resp.bits.data.zext, io.daxi2apb.resp.bits.data.zext),
     Seq(
       LD_LH -> lshift(15, 0).asSInt,
       LD_LB -> lshift(7, 0).asSInt,

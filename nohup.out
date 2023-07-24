@@ -28,3 +28,12 @@ libva error: vaGetDriverNameByIndex() failed with unknown libva error, driver_na
 [0714/213512.560341:ERROR:elf_dynamic_array_reader.h(64)] tag not found
 [0714/213512.560551:ERROR:elf_dynamic_array_reader.h(64)] tag not found
 [0714/213512.560579:ERROR:elf_dynamic_array_reader.h(64)] tag not found
+libva error: vaGetDriverNameByIndex() failed with unknown libva error, driver_name = (null)
+(node:26578) UnhandledPromiseRejectionWarning: Error: net::ERR_PROXY_CONNECTION_FAILED
+    at SimpleURLLoaderWrapper.<anonymous> (node:electron/js2c/browser_init:2:49386)
+    at SimpleURLLoaderWrapper.emit (node:events:513:28)
+(Use `Cursor --trace-warnings ...` to show where the warning was created)
+(node:26578) UnhandledPromiseRejectionWarning: Unhandled promise rejection. This error originated either by throwing inside of an async function without a catch block, or by rejecting a promise which was not handled with .catch(). To terminate the node process on unhandled promise rejection, use the CLI flag `--unhandled-rejections=strict` (see https://nodejs.org/api/cli.html#cli_unhandled_rejections_mode). (rejection id: 1)
+[90m[main 2023-07-17T02:16:51.982Z][0m update#ctor - updates are disabled as there is no update URL
+[90m[main 2023-07-17T02:17:03.816Z][0m Extension host with pid 26957 exited with code: 0, signal: unknown.
+[90m[main 2023-07-17T02:29:39.345Z][0m Extension host with pid 27290 exited with code: 0, signal: unknown.
